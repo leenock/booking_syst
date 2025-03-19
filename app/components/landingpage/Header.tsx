@@ -115,7 +115,7 @@ export default function Header() {
           </div>
 
           <div className="absolute bottom-0 w-full p-4">
-            <button className="w-full py-2 px-6 bg-transparent border-2 border-amber-400 text-amber-400 rounded-lg font-medium transition-all duration-300 hover:bg-amber-400/10 hover:border-amber-300 hover:text-amber-300 transform hover:scale-105">
+            <button className="w-full py-2 px-6 bg-[#654222] text-white rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105">
               Book Now
             </button>
           </div>
@@ -129,7 +129,7 @@ export default function Header() {
       {renderMobileSidebar()}
 
       {/* Header */}
-      <header className="bg-gradient-to-r from-[#654222] to-[#654222] text-white sticky top-0 z-40 shadow-md transition-colors duration-300">
+      <header className="bg-gradient-to-r from-[#101727] to-[#101727] text-white sticky top-0 z-40 shadow-[0_4px_6px_-1px_rgba(255,255,255,0.1)] transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -157,7 +157,7 @@ export default function Header() {
 
             {/* Right side actions */}
             <div className="flex items-center space-x-4">
-              <button className="hidden md:block py-2 px-6 bg-transparent border-2 border-amber-400 text-amber-400 rounded-lg font-medium transition-all duration-300 hover:bg-amber-400/10 hover:border-amber-300 hover:text-amber-300 transform hover:scale-105">
+              <button className="hidden md:block py-2 px-6 bg-[#654222] text-white rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105">
                 Book Now
               </button>
             </div>
