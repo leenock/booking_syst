@@ -4,7 +4,7 @@ import {
   HomeIcon, 
   CalendarIcon,
   MapPinIcon,
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 
 interface ServiceCardProps {
   icon: React.ReactNode;
