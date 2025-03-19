@@ -36,7 +36,7 @@ export default function Services() {
           <span className="inline-block px-3 py-1 text-xs font-medium rounded-full mb-3 bg-amber-900/50 text-amber-300">Our Services</span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4 text-white">Experience Luxury Services</h2>
           <p className="max-w-2xl mx-auto text-gray-400">
-            We offer a wide range of services to make your stay memorable and comfortable.
+            We offer a wide range of services to make your stay memorable and comfortable..
           </p>
         </div>
 
