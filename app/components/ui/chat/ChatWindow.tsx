@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PaperAirplaneIcon, BookmarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface Message {
   id: number;
@@ -10,10 +10,31 @@ interface Message {
   timestamp: Date;
 }
 
+interface SavedChat {
+  messages: Message[];
+  savedAt: Date;
+}
+
+const CHAT_STORAGE_KEY = 'vicarage_chat_history';
+const CHAT_EXPIRY_DAYS = 7; // Chats expire after 7 days
+
 const ChatWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 1,
+      text: "Hello! How can I assist you today?",
+      isUser: false,
+      timestamp: new Date(),
+    },
+  ]);
+
+  // Load saved chat on component mount
+  useEffect(() => {
+    loadSavedChat();
+  }, []);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -27,14 +48,73 @@ const ChatWindow = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hello! How can I assist you today?",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const loadSavedChat = () => {
+    try {
+      const savedChats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+      if (savedChats.length > 0) {
+        // Get the most recent chat that hasn't expired
+        const now = new Date();
+        const validChats = savedChats.filter((chat: SavedChat) => {
+          const chatDate = new Date(chat.savedAt);
+          const diffDays = (now.getTime() - chatDate.getTime()) / (1000 * 3600 * 24);
+          return diffDays <= CHAT_EXPIRY_DAYS;
+        });
+
+        if (validChats.length > 0) {
+          const latestChat = validChats[validChats.length - 1];
+          setMessages(latestChat.messages.map((msg: Message) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })));
+        }
+
+        // Clean up expired chats
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(validChats));
+      }
+    } catch (error) {
+      console.error('Error loading saved chat:', error);
+    }
+  };
+
+  const saveChat = () => {
+    try {
+      const savedChats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+      const newSavedChat: SavedChat = {
+        messages,
+        savedAt: new Date()
+      };
+      
+      savedChats.push(newSavedChat);
+      
+      // Keep only chats from the last CHAT_EXPIRY_DAYS days
+      const now = new Date();
+      const validChats = savedChats.filter((chat: SavedChat) => {
+        const chatDate = new Date(chat.savedAt);
+        const diffDays = (now.getTime() - chatDate.getTime()) / (1000 * 3600 * 24);
+        return diffDays <= CHAT_EXPIRY_DAYS;
+      });
+
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(validChats));
+      
+      // Show save confirmation (you could add a toast notification here)
+      alert('Chat saved! Will be available for 7 days.');
+    } catch (error) {
+      console.error('Error saving chat:', error);
+      alert('Failed to save chat.');
+    }
+  };
+
+  const clearSavedChats = () => {
+    if (window.confirm('Are you sure you want to clear all saved chats?')) {
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+      setMessages([{
+        id: 1,
+        text: "Hello! How can I assist you today?",
+        isUser: false,
+        timestamp: new Date(),
+      }]);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +156,7 @@ const ChatWindow = () => {
           shadow-lg hover:bg-[#654222]/90
           transition-all duration-300
           transform hover:scale-105
-          fixed bottom-4 right-4 md:static
+          fixed bottom-6 right-4 z-50
         `}
       >
         <svg
@@ -98,7 +178,7 @@ const ChatWindow = () => {
       {/* Chat Window */}
       <div 
         className={`
-          fixed ${isMobile ? 'inset-0' : 'bottom-4 right-4'}
+          fixed ${isMobile ? 'bottom-20 right-4 left-4' : 'bottom-4 right-4'}
           transition-all duration-300 ease-in-out transform
           ${isOpen 
             ? 'opacity-100 translate-y-0 scale-100' 
@@ -110,9 +190,10 @@ const ChatWindow = () => {
           className={`
             flex flex-col
             ${isMobile 
-              ? 'h-screen w-screen' 
-              : 'w-96 h-[600px] rounded-2xl'
+              ? 'h-[80vh] w-full' 
+              : 'w-96 h-[600px]'
             }
+            rounded-2xl
             bg-gradient-to-r from-[#211313] to-[#211313] shadow-2xl
           `}
         >
@@ -122,12 +203,28 @@ const ChatWindow = () => {
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
               <h3 className="text-white font-medium">Vicarage AI Assistant</h3>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-white/10 rounded-lg p-1 transition-colors duration-200"
-            >
-              <XMarkIcon className="w-6 h-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={saveChat}
+                className="text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors duration-200"
+                title="Save chat (available for 7 days)"
+              >
+                <BookmarkIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={clearSavedChats}
+                className="text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors duration-200"
+                title="Clear saved chats"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white hover:bg-white/10 rounded-lg p-1.5 transition-colors duration-200"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Messages */}

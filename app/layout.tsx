@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
-import Header from "./components/landingpage/Header";
+
 import Footer from "./components/landingpage/Footer";
 import ChatWindow from "./components/ui/chat/ChatWindow";
 
@@ -46,7 +46,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <div className="flex flex-col min-h-screen bg-gray-900">
-          <Header />
+          
           <main className="flex-grow">{children}</main>
           <Footer />
           <ChatWindow />
