@@ -13,7 +13,7 @@ export default function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/images/luxury-room.jpg"
+          src="/images/luxury.jpg"
           alt="Luxury Hotel Room"
           fill
           className="object-cover"
