@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
 
 interface NavLinkProps {
   text: string;
@@ -115,9 +116,12 @@ export default function Header() {
           </div>
 
           <div className="absolute bottom-0 w-full p-4">
-            <button className="w-full py-2 px-6 bg-[#654222] text-white rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105">
+            <Link 
+              href="/pages/cottages" 
+              className="block w-full py-2 px-6 bg-[#654222] text-white text-center rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105"
+            >
               Book Now
-            </button>
+            </Link>
           </div>
         </div>
       </>
@@ -157,9 +161,12 @@ export default function Header() {
 
             {/* Right side actions */}
             <div className="flex items-center space-x-4">
-              <button className="hidden md:block py-2 px-6 bg-[#654222] text-white rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105">
+              <Link 
+                href="/pages/cottages" 
+                className="hidden md:block py-2 px-6 bg-[#654222] text-white rounded-lg font-medium transition-all duration-300 hover:bg-[#654222]/90 hover:text-white transform hover:scale-105"
+              >
                 Book Now
-              </button>
+              </Link>
             </div>
           </div>
         </div>
