@@ -84,15 +84,15 @@ export default function Navbar() {
 
           <div className="py-4 flex flex-col">
             <NavLink text="Home" href="/" onClick={closeSidebarOnMobile} />
-            <NavLink text="Resort Cottages" href="/rooms" onClick={closeSidebarOnMobile} />
-            <NavLink text="Gallery" href="/gallery" onClick={closeSidebarOnMobile} />
-            <NavLink text="Meetings & Events" href="/events" onClick={closeSidebarOnMobile} />
-            <NavLink text="Contact Us" href="/Contact" onClick={closeSidebarOnMobile}/>
+            <NavLink text="Resort Cottages" href="/pages/cottages" onClick={closeSidebarOnMobile} />
+            <NavLink text="Gallery" href="/pages/gallery" onClick={closeSidebarOnMobile} />
+            <NavLink text="Meetings & Events" href="/pages/meeting_events" onClick={closeSidebarOnMobile} />
+            <NavLink text="Contact Us" href="/pages/contact_us" onClick={closeSidebarOnMobile}/>
           </div>
 
           {/* Mobile Create Account Button */}
           <div className="absolute bottom-0 w-full p-4">
-            <Link href="/register" className="block w-full">
+            <Link href="/pages/register" className="block w-full">
               <button className="w-full relative inline-flex items-center justify-center px-6 py-2 overflow-hidden text-sm font-medium text-white rounded-lg group bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 transition-all duration-300">
                 <span className="relative flex items-center">
                   Create Account
@@ -133,15 +133,15 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-1">
-              <NavLink text="Resort Cottages" href="/rooms" />
-              <NavLink text="Gallery" href="/gallery" />
-              <NavLink text="Meetings & Events" href="/events" />
-              <NavLink text="Contact Us" href="/Contact" />
+              <NavLink text="Resort Cottages" href="/pages/cottages" />
+              <NavLink text="Gallery" href="/pages/gallery" />
+              <NavLink text="Meetings & Events" href="/pages/meeting_events" />
+              <NavLink text="Contact Us" href="/pages/contact_us" />
             </nav>
 
             {/* Create Account Button */}
             <div className="hidden lg:block">
-              <Link href="/register">
+              <Link href="/pages/register">
                 <button className="relative inline-flex items-center px-6 py-2 overflow-hidden text-sm font-medium text-white rounded-lg group bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
                   <span className="relative flex items-center">
                     Create Account
