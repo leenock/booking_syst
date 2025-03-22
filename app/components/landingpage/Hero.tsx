@@ -18,8 +18,7 @@ const Hero = () => {
                 Discover the gem
               </span>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight mb-4 md:mb-6 animate-fade-in-up animation-delay-150">
-                Vicarage <br />
-                <span className="text-amber-400">Resorts</span>
+                Vicarage <span className="text-amber-400">Resorts</span>
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-xl mb-6 md:mb-8 animate-fade-in-up animation-delay-300">
                 Haven of relaxation and rejuvenation that climaxes with

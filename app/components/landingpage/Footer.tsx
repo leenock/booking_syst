@@ -1,4 +1,6 @@
 'use client';
+import Link from "next/link";
+
 
 import { 
   MapPinIcon,
@@ -40,10 +42,10 @@ export default function Footer() {
           <div>
             <h4 className="font-medium text-lg mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:opacity-75 transition-opacity">About Us</a></li>
-              <li><a href="#" className="hover:opacity-75 transition-opacity">Our Rooms</a></li>
-              <li><a href="#" className="hover:opacity-75 transition-opacity">Services</a></li>
-              <li><a href="#" className="hover:opacity-75 transition-opacity">Contact</a></li>
+              <li><Link href="/" className="hover:opacity-75 transition-opacity">About Us</Link></li>
+              <li><Link href="/pages/cottages" className="hover:opacity-75 transition-opacity">Our Rooms</Link>    </li>          
+              <li><Link href="/" className="hover:opacity-75 transition-opacity">Services</Link></li>
+              <li><Link href="/pages/contact_us" className="hover:opacity-75 transition-opacity">Contact</Link></li>
             </ul>
           </div>
           <div>
