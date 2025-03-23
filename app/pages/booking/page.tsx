@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import { Calendar, Phone, Mail, User, Hotel, Users, CreditCard, MessageSquare, Tag } from 'lucide-react';
 
-export default function BookingPage() {
+function BookingPageContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
@@ -327,5 +327,17 @@ export default function BookingPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    }>
+      <BookingPageContent />
+    </Suspense>
   );
 } 
