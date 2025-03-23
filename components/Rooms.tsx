@@ -12,8 +12,8 @@ export default function Rooms() {
       id: 'standard',
       name: 'Standard Room',
       description: 'Perfect for solo travelers or couples, our Standard Room offers essential comfort with modern amenities.',
-      price: 199,
-      image: '/images/luxury.jpg',
+      price: 8000,
+      image: '/images/bed1.webp',
       features: ['Queen-size bed', 'Smart TV', 'Free Wi-Fi'],
       amenities: [
         { icon: WifiIcon, label: 'High-speed WiFi' },
@@ -24,9 +24,9 @@ export default function Rooms() {
     {
       id: 'deluxe',
       name: 'Deluxe Room',
-      description: 'Spacious and elegant, our Deluxe Room provides extra comfort with premium furnishings and a city view.',
-      price: 299,
-      image: '/images/luxury.jpg',
+      description: 'Spacious and elegant, our Deluxe Room provides extra comfort with premium furnishings',
+      price: 10000,
+      image: '/images/bed2.webp',
       features: ['King-size bed', 'City view', 'Mini bar'],
       amenities: [
         { icon: WifiIcon, label: 'High-speed WiFi' },
@@ -38,8 +38,8 @@ export default function Rooms() {
       id: 'suite',
       name: 'Executive Suite',
       description: 'Experience ultimate luxury in our Executive Suite with separate living area and panoramic views.',
-      price: 499,
-      image: '/images/luxury.jpg',
+      price: 12000,
+      image: '/images/bed3.jpg',
       features: ['King-size bed', 'Living room', 'Jacuzzi'],
       amenities: [
         { icon: WifiIcon, label: 'High-speed WiFi' },
@@ -98,7 +98,7 @@ export default function Rooms() {
                   <h3 className="text-2xl font-bold text-white">{room.name}</h3>
                   <div className="text-right">
                     <span className="text-2xl font-bold text-amber-400">
-                      ${room.price}
+                      ksh {room.price}
                     </span>
                     <span className="text-gray-400 text-sm">/night</span>
                   </div>

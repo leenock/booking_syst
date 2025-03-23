@@ -69,9 +69,9 @@ const Hero = () => {
           <div className="relative order-1 lg:order-2 h-[300px] sm:h-[400px] md:h-[500px] lg:h-[700px] animate-float">
             <div className="absolute inset-0 rounded-2xl sm:rounded-[3rem] overflow-hidden shadow-2xl shadow-amber-500/10">
               <img
-                src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80"
-                alt="Luxury hotel room"
+                src="/images/heroimage.jpg"                alt="Luxury hotel room"
                 className="w-full h-full object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
             </div>

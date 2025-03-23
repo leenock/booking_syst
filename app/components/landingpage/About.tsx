@@ -62,7 +62,7 @@ export default function About() {
           <div className="order-1 lg:order-2 relative animate-float">
             <div className="relative rounded-[2.5rem] overflow-hidden shadow-xl shadow-amber-500/10">
               <img 
-                src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+                src="/images/abtus.jpg"
                 alt="Hotel exterior" 
                 className="w-full h-auto rounded-[2.5rem] transform transition-transform hover:scale-105 duration-700"
               />

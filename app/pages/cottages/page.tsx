@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import { CalendarIcon, Users2, Bed, Bath, Home, Coffee } from 'lucide-react';
@@ -10,40 +11,41 @@ import "react-datepicker/dist/react-datepicker.css";
 const cottages = [
   {
     id: 1,
-    name: 'Lakeside Cottage',
+    name: 'Standard Room',
     description: 'Serene cottage with stunning lake views, perfect for a romantic getaway.',
-    price: 299,
-    image: '/images/luxury.jpg',
+    price: 8000,
+    image: '/images/bed1.webp',
     beds: 1,
     baths: 1,
     maxGuests: 2,
-    amenities: ['Lake View', 'Private Deck', 'Fireplace', 'Mini Kitchen']
+    amenities: ['High-speed WiFi', '4K Smart TV']
   },
   {
     id: 2,
-    name: 'Family Villa',
+    name: 'Deluxe Room',
     description: 'Spacious villa with multiple bedrooms, ideal for family vacations.',
-    price: 499,
-    image: '/images/luxury.jpg',
+    price: 10000,
+    image: '/images/bed2.webp',
     beds: 3,
     baths: 2,
     maxGuests: 6,
-    amenities: ['Garden View', 'Full Kitchen', 'Game Room', 'BBQ Area']
+    amenities: ['High-speed WiFi', '4K Smart TV', 'Premium Coffee Station', 'Mini Bar']
   },
   {
     id: 3,
-    name: 'Executive Cottage',
+    name: 'Executive Suite',
     description: 'Luxury cottage with modern amenities and private pool.',
-    price: 599,
-    image: '/images/luxury.jpg',
+    price: 12000,
+    image: '/images/bed3.jpg',
     beds: 2,
     baths: 2,
     maxGuests: 4,
-    amenities: ['Private Pool', 'Office Space', 'Premium View', 'Butler Service']
+    amenities: ['High-speed WiFi', '4K Smart TV', 'Premium Coffee Station', 'Mini Bar']
   }
 ];
 
 export default function CottagesPage() {
+  const router = useRouter();
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [guests, setGuests] = useState(1);
@@ -51,7 +53,18 @@ export default function CottagesPage() {
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Booking details:', { checkIn, checkOut, guests, selectedCottage });
+    
+    if (!checkIn || !checkOut) return;
+
+    const params = new URLSearchParams({
+      checkIn: checkIn.toISOString().split('T')[0],
+      checkOut: checkOut.toISOString().split('T')[0],
+      adults: guests.toString(),
+      children: '0',
+      roomType: selectedCottage ? selectedCottage.toString() : 'any'
+    });
+
+    router.push(`/pages/booking?${params.toString()}`);
   };
 
   return (
@@ -67,6 +80,7 @@ export default function CottagesPage() {
             fill
             className="object-cover"
             priority
+            sizes="100vw"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
@@ -97,6 +111,7 @@ export default function CottagesPage() {
                     minDate={new Date()}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     placeholderText="Select date"
+                    required
                   />
                 </div>
                 <div>
@@ -110,6 +125,7 @@ export default function CottagesPage() {
                     minDate={checkIn || new Date()}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                     placeholderText="Select date"
+                    required
                   />
                 </div>
                 <div>
@@ -142,7 +158,7 @@ export default function CottagesPage() {
                   </select>
                 </div>
               </div>
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center">
                 <button
                   type="submit"
                   className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-12 py-4 rounded-lg
@@ -181,7 +197,7 @@ export default function CottagesPage() {
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-2xl font-bold text-gray-900">{cottage.name}</h3>
                     <div className="text-right">
-                      <span className="text-2xl font-bold text-amber-600">${cottage.price}</span>
+                      <span className="text-2xl font-bold text-amber-600">ksh {cottage.price}</span>
                       <span className="text-gray-500 text-sm">/night</span>
                     </div>
                   </div>

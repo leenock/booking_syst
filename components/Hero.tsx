@@ -1,12 +1,37 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { CalendarIcon, UserGroupIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
 export default function Hero() {
-  const [guests, setGuests] = useState(1);
-  const [roomType, setRoomType] = useState('any');
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    checkIn: '',
+    checkOut: '',
+    guests: '1',
+    roomType: 'any'
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const params = new URLSearchParams({
+      checkIn: formData.checkIn,
+      checkOut: formData.checkOut,
+      adults: formData.guests,
+      children: '0',
+      roomType: formData.roomType
+    });
+
+    router.push(`/pages/booking?${params.toString()}`);
+  };
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-gray-900">
@@ -18,12 +43,13 @@ export default function Hero() {
           fill
           className="object-cover"
           priority
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" />
       </div>
 
       <div className="relative z-10 w-full">
-        <div className="max-w-7xl mx-auto px-4 py-12 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
           {/* Left Column - Hero Content */}
           <div className="space-y-8">
             <div className="space-y-4 animate-fade-in-up">
@@ -54,83 +80,91 @@ export default function Hero() {
           </div>
 
           {/* Right Column - Booking Form */}
-          <div className="lg:justify-self-end w-full lg:max-w-md">
-            <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl animate-fade-in-up animation-delay-150">
-              <h2 className="text-2xl font-bold text-white mb-6">Book Your Stay</h2>
-              
-              <form className="space-y-4">
-                {/* Check-in & Check-out */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Check-in</label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
-                        onFocus={(e) => e.target.showPicker()} // Open date picker when field is clicked
-                      />
-                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Check-out</label>
-                    <div className="relative">
-                      <input
-                        type="date"
-                        className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
-                        onFocus={(e) => e.target.showPicker()} // Open date picker when field is clicked
-                      />
-                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Room Type */}
+          <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl animate-fade-in-up animation-delay-150">
+            <h2 className="text-2xl font-bold text-white mb-6">Book Your Stay</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Check-in & Check-out */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Room Type</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Check-in</label>
                   <div className="relative">
-                    <select
-                      value={roomType}
-                      onChange={(e) => setRoomType(e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
-                    >
-                      <option value="any" className="bg-gray-900">Any Room</option>
-                      <option value="standard" className="bg-gray-900">Standard Room</option>
-                      <option value="deluxe" className="bg-gray-900">Deluxe Room</option>
-                      <option value="suite" className="bg-gray-900">Executive Suite</option>
-                    </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="date"
+                      name="checkIn"
+                      value={formData.checkIn}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
+                      required
+                      onFocus={(e) => e.target.showPicker()}
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
                 </div>
-
-                {/* Guests */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Guests</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Check-out</label>
                   <div className="relative">
-                    <select
-                      value={guests}
-                      onChange={(e) => setGuests(Number(e.target.value))}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
-                    >
-                      {[1, 2, 3, 4].map((num) => (
-                        <option key={num} value={num} className="bg-gray-900">
-                          {num} {num === 1 ? 'Guest' : 'Guests'}
-                        </option>
-                      ))}
-                    </select>
-                    <UserGroupIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="date"
+                      name="checkOut"
+                      value={formData.checkOut}
+                      onChange={handleInputChange}
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
+                      required
+                      onFocus={(e) => e.target.showPicker()}
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   </div>
                 </div>
+              </div>
 
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg mt-6"
-                >
-                  Check Availability
-                </button>
-              </form>
-            </div>
+              {/* Room Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Room Type</label>
+                <div className="relative">
+                  <select
+                    name="roomType"
+                    value={formData.roomType}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
+                  >
+                    <option value="any" className="bg-gray-900">Any Room</option>
+                    <option value="standard" className="bg-gray-900">Standard Room</option>
+                    <option value="deluxe" className="bg-gray-900">Deluxe Room</option>
+                    <option value="suite" className="bg-gray-900">Executive Suite</option>
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Guests */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Guests</label>
+                <div className="relative">
+                  <select
+                    name="guests"
+                    value={formData.guests}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
+                  >
+                    {[1, 2, 3, 4].map((num) => (
+                      <option key={num} value={num} className="bg-gray-900">
+                        {num} {num === 1 ? 'Guest' : 'Guests'}
+                      </option>
+                    ))}
+                  </select>
+                  <UserGroupIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg mt-6"
+              >
+                Check Availability
+              </button>
+            </form>
           </div>
         </div>
       </div>

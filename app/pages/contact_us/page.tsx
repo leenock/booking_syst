@@ -51,9 +51,9 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900">Location</h3>
                       <p className="text-gray-600">
-                        123 Luxury Avenue<br />
-                        Cityville, State 12345<br />
-                        United States
+                      Vicarage Resorts, <br />
+                      Kanyuambora,<br />
+                      Mate, Kanyuambora
                       </p>
                     </div>
                   </div>
@@ -63,8 +63,8 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900">Phone</h3>
                       <p className="text-gray-600">
-                        +1 (555) 123-4567<br />
-                        +1 (555) 987-6543
+                      +254 (074) 3 666 333<br />
+                        
                       </p>
                     </div>
                   </div>
@@ -97,8 +97,8 @@ export default function ContactPage() {
               <div className="bg-white rounded-2xl p-8 shadow-lg">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Getting Here</h2>
                 <p className="text-gray-600">
-                  Located in the heart of the city, Vicarage Resorts is easily accessible from major highways and airports. 
-                  We offer complimentary valet parking for all our guests.
+                Located in Kanyuambora, just 30 minutes from Embu and 200 meters off Mate Road. We take pride
+                 in offering a retreat for eco, wellness, business, and leisure travelers.
                 </p>
               </div>
             </div>

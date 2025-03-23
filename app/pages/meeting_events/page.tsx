@@ -7,32 +7,32 @@ const meetingSpaces = [
   {
     id: 1,
     title: 'Grand Boardroom',
-    image: '/images/luxury.jpg',
+    image: '/images/meet3.jpg',
   },
   {
     id: 2,
     title: 'Executive Meeting Room',
-    image: '/images/luxury.jpg',
+    image: '/images/meet4.jpg',
   },
   {
     id: 3,
     title: 'Conference Hall',
-    image: '/images/luxury.jpg',
+    image: '/images/meet8.jpg',
   },
   {
     id: 4,
-    title: 'Business Center',
-    image: '/images/luxury.jpg',
+    title: 'Dining Room',
+    image: '/images/dining.jpg',
   },
   {
     id: 5,
     title: 'Training Room',
-    image: '/images/luxury.jpg',
+    image: '/images/training.jpg',
   },
   {
     id: 6,
-    title: 'Presentation Theater',
-    image: '/images/luxury.jpg',
+    title: 'Family Lobby',
+    image: '/images/family.jpg',
   },
 ];
 
