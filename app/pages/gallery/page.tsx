@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Search, MapPin, Star, Camera } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import Footer from '@/app/components/landingpage/Footer';
 
 const galleryImages = [
   {
@@ -179,6 +180,7 @@ export default function GalleryPage() {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

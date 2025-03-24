@@ -4,6 +4,7 @@ import type { NextPage } from "next";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Rooms from "@/components/Rooms";
+import Footer from "@/app/components/landingpage/Footer";
 
 const Home: NextPage = () => {
   return (
@@ -15,6 +16,7 @@ const Home: NextPage = () => {
         {/* Rooms Section */}
         <Rooms /> 
       </main>
+      <Footer />
     </div>
   );
 };

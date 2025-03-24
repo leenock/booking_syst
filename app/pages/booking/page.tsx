@@ -25,10 +25,10 @@ function BookingPageContent() {
   const [isLoading, setIsLoading] = useState(false);
 
   const roomTypes = [
-    { id: 'standard', name: 'Standard Room', price: 150 },
-    { id: 'deluxe', name: 'Deluxe Room', price: 250 },
-    { id: 'suite', name: 'Executive Suite', price: 350 },
-    { id: 'presidential', name: 'Presidential Suite', price: 500 },
+    { id: 'standard', name: 'Standard Room', price: 8000 },
+    { id: 'deluxe', name: 'Deluxe Room', price: 10000 },
+    { id: 'suite', name: 'Executive Suite', price: 12000 },
+    { id: 'presidential', name: 'Presidential Suite', price: 15000},
   ];
 
   const paymentMethods = [
@@ -191,7 +191,7 @@ function BookingPageContent() {
                     <option value="">Select a room type</option>
                     {roomTypes.map(room => (
                       <option key={room.id} value={room.id}>
-                        {room.name} - ${room.price}/night
+                        {room.name} - ksh {room.price}/night
                       </option>
                     ))}
                   </select>

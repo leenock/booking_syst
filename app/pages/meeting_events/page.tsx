@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
+import Footer from '@/app/components/landingpage/Footer';
 
 const meetingSpaces = [
   {
@@ -77,6 +78,7 @@ export default function MeetingEventsPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

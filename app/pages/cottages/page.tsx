@@ -7,6 +7,8 @@ import Navbar from '@/components/Navbar';
 import { CalendarIcon, Users2, Bed, Bath, Home, Coffee } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import Footer from '@/app/components/landingpage/Footer';
+
 
 const cottages = [
   {
@@ -244,6 +246,7 @@ export default function CottagesPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
