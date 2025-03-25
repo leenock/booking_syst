@@ -144,7 +144,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="text-sm">
-                  <Link href="/pages/forgot-password" className="font-medium text-amber-600 hover:text-amber-500 transition-colors duration-200">
+                  <Link href="/pages/auth/forgot-password" className="font-medium text-amber-600 hover:text-amber-500 transition-colors duration-200">
                     Forgot your password?
                   </Link>
                 </div>
@@ -174,7 +174,7 @@ export default function LoginPage() {
               <div className="text-center mt-4">
                 <p className="text-sm text-gray-600">
                   Don't have an account?{' '}
-                  <Link href="/pages/register" className="font-medium text-amber-600 hover:text-amber-500 transition-colors duration-200">
+                  <Link href="/pages/auth/register" className="font-medium text-amber-600 hover:text-amber-500 transition-colors duration-200">
                     Sign up
                   </Link>
                 </p>

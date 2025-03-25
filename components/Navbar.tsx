@@ -92,7 +92,7 @@ export default function Navbar() {
 
           {/* Mobile Create Account Button */}
           <div className="absolute bottom-0 w-full p-4">
-            <Link href="/pages/register" className="block w-full">
+            <Link href="/pages/auth/register" className="block w-full">
               <button className="w-full relative inline-flex items-center justify-center px-6 py-2 overflow-hidden text-sm font-medium text-white rounded-lg group bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 transition-all duration-300">
                 <span className="relative flex items-center">
                   Create Account
@@ -141,7 +141,7 @@ export default function Navbar() {
 
             {/* Create Account Button */}
             <div className="hidden lg:block">
-              <Link href="/pages/register">
+              <Link href="/pages/auth/register">
                 <button className="relative inline-flex items-center px-6 py-2 overflow-hidden text-sm font-medium text-white rounded-lg group bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 transition-all duration-300 transform hover:scale-105 hover:shadow-lg">
                   <span className="relative flex items-center">
                     Create Account

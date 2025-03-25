@@ -1,65 +1,79 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Image from 'next/image';
-import Navbar from '@/components/Navbar';
-import { Calendar, Phone, Mail, User, Hotel, Users, CreditCard, MessageSquare, Tag } from 'lucide-react';
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
+import Navbar from "@/components/Navbar";
+import {
+  Calendar,
+  Phone,
+  Mail,
+  User,
+  Hotel,
+  Users,
+  CreditCard,
+  MessageSquare,
+  Tag,
+} from "lucide-react";
 
 function BookingPageContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    checkIn: searchParams.get('checkIn') || '',
-    checkOut: searchParams.get('checkOut') || '',
-    adults: searchParams.get('adults') || '1',
-    children: searchParams.get('children') || '0',
-    roomType: searchParams.get('roomType') || '',
-    fullName: '',
-    email: '',
-    phone: '',
-    specialRequests: '',
-    promoCode: '',
-    paymentMethod: '',
+    checkIn: searchParams.get("checkIn") || "",
+    checkOut: searchParams.get("checkOut") || "",
+    adults: searchParams.get("adults") || "1",
+    children: searchParams.get("children") || "0",
+    roomType: searchParams.get("roomType") || "",
+    fullName: "",
+    email: "",
+    phone: "",
+    specialRequests: "",
+    promoCode: "",
+    paymentMethod: "",
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const roomTypes = [
-    { id: 'standard', name: 'Standard Room', price: 8000 },
-    { id: 'deluxe', name: 'Deluxe Room', price: 10000 },
-    { id: 'suite', name: 'Executive Suite', price: 12000 },
-    { id: 'presidential', name: 'Presidential Suite', price: 15000},
+    { id: "standard", name: "Standard Room", price: 8000 },
+    { id: "deluxe", name: "Deluxe Room", price: 10000 },
+    { id: "suite", name: "Executive Suite", price: 12000 },
+    { id: "presidential", name: "Presidential Suite", price: 15000 },
   ];
 
   const paymentMethods = [
-    { id: 'mpesa', name: 'M-Pesa' },
-    { id: 'card', name: 'Credit/Debit Card' },
-    { id: 'bank', name: 'Bank Transfer' },
-    { id: 'cash', name: 'Cash on Arrival' },
+    { id: "mpesa", name: "M-Pesa" },
+    { id: "card", name: "Credit/Debit Card" },
+    { id: "bank", name: "Bank Transfer" },
+    { id: "cash", name: "Cash on Arrival" },
   ];
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       // Here you would typically make an API call to your backend
-      console.log('Booking submitted:', formData);
+      console.log("Booking submitted:", formData);
       // Redirect to confirmation page
-      window.location.href = '/booking/confirmation';
+      window.location.href = "/booking/confirmation";
     } catch (error) {
-      console.error('Booking failed:', error);
+      console.error("Booking failed:", error);
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +95,7 @@ function BookingPageContent() {
       </div>
 
       <Navbar />
-      
+
       <main className="max-w-4xl mx-auto px-4 py-8 pt-24 relative">
         <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-8 md:p-10 relative overflow-hidden border-2 border-gray-100">
           {/* Decorative elements */}
@@ -103,16 +117,28 @@ function BookingPageContent() {
           </div>
 
           <div className="relative">
-            <div className={`transition-all duration-700 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">Complete Your Booking</h1>
-              <p className="text-gray-600 mb-8">Fill in the details below to secure your reservation</p>
+            <div
+              className={`transition-all duration-700 ${
+                mounted
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-2">
+                Complete Your Booking
+              </h1>
+              <p className="text-gray-600 mb-8">
+                Fill in the details below to secure your reservation
+              </p>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Dates and Guests */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Check-in Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Check-in Date
+                  </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -125,9 +151,11 @@ function BookingPageContent() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Check-out Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Check-out Date
+                  </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -145,7 +173,9 @@ function BookingPageContent() {
               {/* Guests Count */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Adults</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adults
+                  </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -159,9 +189,11 @@ function BookingPageContent() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Children</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Children
+                  </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -178,7 +210,9 @@ function BookingPageContent() {
 
               {/* Room Type */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Room Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Room Type
+                </label>
                 <div className="relative">
                   <Hotel className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                   <select
@@ -189,7 +223,7 @@ function BookingPageContent() {
                     className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
                   >
                     <option value="">Select a room type</option>
-                    {roomTypes.map(room => (
+                    {roomTypes.map((room) => (
                       <option key={room.id} value={room.id}>
                         {room.name} - ksh {room.price}/night
                       </option>
@@ -201,7 +235,9 @@ function BookingPageContent() {
               {/* Personal Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Full Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -215,9 +251,11 @@ function BookingPageContent() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
@@ -235,7 +273,9 @@ function BookingPageContent() {
 
               {/* Phone Number */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number
+                </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                   <input
@@ -252,7 +292,9 @@ function BookingPageContent() {
 
               {/* Special Requests */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Special Requests</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Special Requests
+                </label>
                 <div className="relative">
                   <MessageSquare className="absolute left-3 top-3 h-5 w-5 text-purple-500" />
                   <textarea
@@ -268,7 +310,9 @@ function BookingPageContent() {
 
               {/* Promo Code */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Promo Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Promo Code
+                </label>
                 <div className="relative">
                   <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                   <input
@@ -284,7 +328,9 @@ function BookingPageContent() {
 
               {/* Payment Method */}
               <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Payment Method
+                </label>
                 <div className="relative">
                   <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                   <select
@@ -295,7 +341,7 @@ function BookingPageContent() {
                     className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
                   >
                     <option value="">Select payment method</option>
-                    {paymentMethods.map(method => (
+                    {paymentMethods.map((method) => (
                       <option key={method.id} value={method.id}>
                         {method.name}
                       </option>
@@ -312,14 +358,30 @@ function BookingPageContent() {
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Processing...
                   </>
                 ) : (
-                  'Complete Booking'
+                  "Complete Booking"
                 )}
               </button>
             </form>
@@ -332,12 +394,14 @@ function BookingPageContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+        </div>
+      }
+    >
       <BookingPageContent />
     </Suspense>
   );
-} 
+}
