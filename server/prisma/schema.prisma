@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 🟢 User & Authentication Models = check 
+
+model User {
+  id        Int       @id @default(autoincrement()) // Ensure id is an Int
+  firstName String?
+  lastName  String?
+  phone     String?   @unique
+  email     String    @unique
+  password  String?
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+}
+
+// 🟢 Room Models = check
+
+model Room {
+  id          String    @id @default(uuid()) // Room ID (UUID)
+  roomNumber  String    @unique // Room Number (Unique)
+  type        String // Room type, e.g., 'Standard', 'Deluxe', 'Executive'
+  price       Float // Room price
+  isAvailable Boolean   @default(true) // Room availability status
+  bookings    Booking[] // List of bookings for this room
+  createdAt   DateTime  @default(now()) // Timestamp for when the room is created
+}
+
+// 🟢 Booking Models = 
+
+model Booking {
+  id             String   @id @default(uuid())  // Booking ID (UUID)
+  fullName       String   // Customer full name
+  email          String   // Customer email
+  phone          String?  // Customer phone number
+  adults         Int      // Number of adults
+  kids           Int      // Number of kids
+  specialRequest String? // Special requests from the customer (optional)
+  paymentMethod  String   // Payment method (e.g., "Credit Card", "M-Pesa", etc.)
+  roomType       String   // Type of room booked (e.g., "Single", "Deluxe")
+  roomPrice      Float    // Price of the room at the time of booking
+  userId         Int?     // Foreign key to User (optional)
+  roomId         String   // Foreign key to Room
+  checkIn        DateTime // Check-in date and time
+  checkOut       DateTime // Check-out date and time
+  user           User?    @relation(fields: [userId], references: [id]) // Optional relation to User
+  room           Room     @relation(fields: [roomId], references: [id]) // Relation to Room
+  createdAt      DateTime @default(now()) // Timestamp for when the booking is created
+}
+
+// 🟢 Room Type and Availability Management
+
+enum RoomType {
+  SINGLE // Room type: Single
+  DELUXE // Room type: Deluxe
+  SUITE // Room type: Suite
+}
+
+// 🟢 Helper Enum (for Room Status)
+
+enum RoomStatus {
+  AVAILABLE // Room is available for booking
+  BOOKED // Room is already booked
+}

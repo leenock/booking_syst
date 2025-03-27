@@ -29,7 +29,6 @@ function BookingPageContent() {
     email: "",
     phone: "",
     specialRequests: "",
-    promoCode: "",
     paymentMethod: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +37,7 @@ function BookingPageContent() {
     { id: "standard", name: "Standard Room", price: 8000 },
     { id: "deluxe", name: "Deluxe Room", price: 10000 },
     { id: "suite", name: "Executive Suite", price: 12000 },
-    { id: "presidential", name: "Presidential Suite", price: 15000 },
+   
   ];
 
   const paymentMethods = [
@@ -304,24 +303,6 @@ function BookingPageContent() {
                     rows={3}
                     className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
                     placeholder="Any special requests or requirements?"
-                  />
-                </div>
-              </div>
-
-              {/* Promo Code */}
-              <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Promo Code
-                </label>
-                <div className="relative">
-                  <Tag className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
-                  <input
-                    type="text"
-                    name="promoCode"
-                    value={formData.promoCode}
-                    onChange={handleInputChange}
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                    placeholder="Enter promo code if available"
                   />
                 </div>
               </div>
