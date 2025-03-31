@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import Sidebar from "@/app/components/user/Sidebar";
-import DashboardOverview from "@/app/components/user/DashboardOverview";
-import NotificationsList from "@/app/components/user/NotificationsList";
-import UserSettings from "@/app/components/user/UserSettings";
+import Sidebar from "@/app/components/user_dash/Sidebar";
+import DashboardOverview from "@/app/components/user_dash/DashboardOverview";
+import NotificationsList from "@/app/components/user_dash/NotificationsList";
+import UserSettings from "@/app/components/user_dash/UserSettings";
 import { CalendarDays, CreditCard, Hotel, Users } from "lucide-react";
 
 export default function DashboardPage() {

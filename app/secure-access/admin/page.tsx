@@ -2,4 +2,4 @@ import AdminDashboardOverview from "@/app/components/admin/AdminDashboardOvervie
 
 export default function AdminDashboard() {
   return <AdminDashboardOverview />;
-} 
+}

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
 
-
 import ChatWindow from "./components/ui/chat/ChatWindow";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -46,9 +45,8 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <div className="flex flex-col min-h-screen bg-gray-900">
-          
           <main className="flex-grow">{children}</main>
-         
+
           <ChatWindow />
         </div>
       </body>

@@ -1,0 +1,85 @@
+{
+  "visitors": {
+    "create": {
+      "request": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "password": "securePassword123",
+        "isActive": true
+      },
+      "response": {
+        "id": "1",
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "isActive": true,
+        "createdAt": "2024-03-30T12:00:00Z"
+      }
+    },
+    "update": {
+      "request": {
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "isActive": false
+      },
+      "response": {
+        "id": "1",
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "isActive": false,
+        "updatedAt": "2024-03-30T12:30:00Z"
+      }
+    },
+    "list": {
+      "response": [
+        {
+          "id": "1",
+          "firstName": "John",
+          "lastName": "Doe",
+          "email": "john.doe@example.com",
+          "phone": "+1234567890",
+          "isActive": true,
+          "createdAt": "2024-03-30T12:00:00Z"
+        },
+        {
+          "id": "2",
+          "firstName": "Jane",
+          "lastName": "Smith",
+          "email": "jane.smith@example.com",
+          "phone": "+1987654321",
+          "isActive": false,
+          "createdAt": "2024-03-30T12:15:00Z"
+        }
+      ]
+    },
+    "single": {
+      "response": {
+        "id": "1",
+        "firstName": "John",
+        "lastName": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1234567890",
+        "isActive": true,
+        "createdAt": "2024-03-30T12:00:00Z"
+      }
+    }
+  },
+  "endpoints": {
+    "create": "POST http://localhost:5000/api/visitors",
+    "update": "PUT http://localhost:5000/api/visitors/:id",
+    "list": "GET http://localhost:5000/api/visitors",
+    "single": "GET http://localhost:5000/api/visitors/:id",
+    "delete": "DELETE http://localhost:5000/api/visitors/:id"
+  },
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your_jwt_token_here"
+  }
+} 

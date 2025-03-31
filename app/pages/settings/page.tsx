@@ -1,7 +1,7 @@
 'use client';
 
-import UserSettings from '@/app/components/user/UserSettings';
-import Sidebar from '@/app/components/user/Sidebar';
+import UserSettings from '@/app/components/user_dash/UserSettings';
+import Sidebar from '@/app/components/user_dash/Sidebar';
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
 

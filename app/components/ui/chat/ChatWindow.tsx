@@ -30,10 +30,12 @@ const ChatWindow = () => {
       timestamp: new Date(),
     },
   ]);
+  const [mounted, setMounted] = useState(false);
 
   // Load saved chat on component mount
   useEffect(() => {
     loadSavedChat();
+    setMounted(true);
   }, []);
 
   // Check if we're on mobile
@@ -245,10 +247,10 @@ const ChatWindow = () => {
                 >
                   <p className="text-sm">{msg.text}</p>
                   <span className="text-xs opacity-75 mt-1 block">
-                    {msg.timestamp.toLocaleTimeString([], { 
+                    {mounted ? msg.timestamp.toLocaleTimeString([], { 
                       hour: '2-digit', 
                       minute: '2-digit' 
-                    })}
+                    }) : ''}
                   </span>
                 </div>
               </div>

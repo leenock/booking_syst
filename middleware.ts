@@ -1,17 +1,24 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  // Get the pathname of the request
-  const path = request.nextUrl.pathname;
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("adminToken")?.value;
+  const isAdminRoute = req.nextUrl.pathname.startsWith("/secure-access/admin");
+  const isLoginPage = req.nextUrl.pathname === "/secure-access/portal";
 
-  // Add your middleware logic here
+  // Redirect to login if trying to access admin routes without token
+  if (isAdminRoute && !token) {
+    return NextResponse.redirect(new URL("/secure-access/portal", req.url));
+  }
+
+  // Redirect to admin dashboard if trying to access login page while already logged in
+  if (isLoginPage && token) {
+    return NextResponse.redirect(new URL("/secure-access/admin", req.url));
+  }
+
   return NextResponse.next();
 }
 
-// Configure which routes to run middleware on
 export const config = {
-  matcher: [
-    // Add your route patterns here
-  ],
-}; 
+  matcher: ["/secure-access/admin/:path*", "/secure-access/portal"],
+};

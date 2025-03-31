@@ -1,0 +1,77 @@
+{
+  "rooms": {
+    "create": {
+      "request": {
+        "roomNumber": "101",
+        "type": "Standard",
+        "price": 150.00,
+        "isAvailable": true
+      },
+      "response": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "roomNumber": "101",
+        "type": "Standard",
+        "price": 150.00,
+        "isAvailable": true,
+        "createdAt": "2024-03-30T12:00:00Z"
+      }
+    },
+    "update": {
+      "request": {
+        "roomNumber": "101",
+        "type": "Standard",
+        "price": 160.00,
+        "isAvailable": false
+      },
+      "response": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "roomNumber": "101",
+        "type": "Standard",
+        "price": 160.00,
+        "isAvailable": false,
+        "createdAt": "2024-03-30T12:00:00Z"
+      }
+    },
+    "list": {
+      "response": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "roomNumber": "101",
+          "type": "Standard",
+          "price": 150.00,
+          "isAvailable": true,
+          "createdAt": "2024-03-30T12:00:00Z"
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "roomNumber": "102",
+          "type": "Deluxe",
+          "price": 250.00,
+          "isAvailable": false,
+          "createdAt": "2024-03-30T12:15:00Z"
+        }
+      ]
+    },
+    "single": {
+      "response": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "roomNumber": "101",
+        "type": "Standard",
+        "price": 150.00,
+        "isAvailable": true,
+        "createdAt": "2024-03-30T12:00:00Z"
+      }
+    }
+  },
+  "endpoints": {
+    "create": "POST http://localhost:5000/api/rooms",
+    "update": "PUT http://localhost:5000/api/rooms/:id",
+    "list": "GET http://localhost:5000/api/rooms",
+    "single": "GET http://localhost:5000/api/rooms/:id",
+    "delete": "DELETE http://localhost:5000/api/rooms/:id"
+  },
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer your_jwt_token_here"
+  }
+} 

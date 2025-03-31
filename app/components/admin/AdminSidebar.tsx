@@ -18,6 +18,7 @@ import {
   Receipt,
   Shield,
 } from "lucide-react";
+import AuthService, { AdminData } from "@/app/services/auth";
 
 // Types
 interface AdminSidebarProps {
@@ -36,10 +37,19 @@ const MENU_ITEMS: MenuItem[] = [
   { name: "Dashboard", icon: Home, href: "/secure-access/admin" },
   { name: "Bookings", icon: Calendar, href: "/secure-access/admin/bookings" },
   { name: "Rooms", icon: Hotel, href: "/secure-access/admin/rooms" },
-  { name: "Users", icon: Users, href: "/secure-access/admin/users" },
+  { name: "System Users", icon: Users, href: "/secure-access/admin/users" },
+  {
+    name: "Visitors Accounts",
+    icon: Users,
+    href: "/secure-access/admin/visitors",
+  },
   { name: "Payments", icon: Receipt, href: "/secure-access/admin/payments" },
   { name: "Security", icon: Shield, href: "/secure-access/admin/security" },
-  { name: "Analytics", icon: BarChart2, href: "/secure-access/admin/analytics" },
+  {
+    name: "Analytics",
+    icon: BarChart2,
+    href: "/secure-access/admin/analytics",
+  },
   { name: "Settings", icon: Settings, href: "/secure-access/admin/settings" },
 ];
 
@@ -79,22 +89,30 @@ const ProfileSkeleton = () => (
 
 // Add analytics tracking
 const trackNavigation = (pageName: string) => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     try {
       console.log(`Admin Navigation tracked: ${pageName}`);
     } catch (error) {
-      console.error('Analytics error:', error);
+      console.error("Analytics error:", error);
     }
   }
 };
 
-export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps) {
+export default function AdminSidebar({
+  isOpen,
+  onOpenChange,
+}: AdminSidebarProps) {
   const pathname = usePathname();
+  const [adminData, setAdminData] = useState<AdminData | null>(null);
 
   // Handlers
   const handleClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
+
+  const handleLogout = async () => {
+    await AuthService.logout();
+  };
 
   const handleResize = useCallback(() => {
     if (window.innerWidth >= DESKTOP_BREAKPOINT) {
@@ -103,6 +121,14 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
   }, [handleClose]);
 
   const isActive = useCallback((path: string) => pathname === path, [pathname]);
+
+  // Get admin data on component mount
+  useEffect(() => {
+    const data = AuthService.getAdminData();
+    if (data) {
+      setAdminData(data);
+    }
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -124,26 +150,40 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
   }, [handleResize]);
 
   // Render helpers
-  const renderProfileSection = () => (
-    <div className="p-6">
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-200 to-indigo-200 flex items-center justify-center">
-            <span className="text-lg font-semibold text-blue-600">AD</span>
+  const renderProfileSection = () => {
+    if (!adminData) return <ProfileSkeleton />;
+
+    return (
+      <div className="p-6">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-200 to-indigo-200 flex items-center justify-center">
+              <span className="text-lg font-semibold text-blue-600">
+                {adminData.lastName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
           </div>
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-gray-800">Admin User</h2>
-          <p className="text-xs text-gray-500">admin@vicarage.com</p>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">
+              {adminData.lastName}
+            </h2>
+            <p className="text-xs text-gray-500">
+              {adminData.email || "admin@vicarage.com"}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderNavigation = () => (
     <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-      <Suspense fallback={[...Array(8)].map((_, i) => <MenuItemSkeleton key={i} />)}>
+      <Suspense
+        fallback={[...Array(8)].map((_, i) => (
+          <MenuItemSkeleton key={i} />
+        ))}
+      >
         {MENU_ITEMS.map((item) => (
           <Link
             key={item.name}
@@ -151,9 +191,10 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
             onClick={() => trackNavigation(item.name)}
             className={`
               flex items-center px-4 py-3 rounded-lg transition-all duration-200
-              ${isActive(item.href)
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-600 hover:bg-gray-50"
+              ${
+                isActive(item.href)
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-50"
               }
             `}
           >
@@ -168,12 +209,12 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
   const renderLogoutButton = () => (
     <div className="p-4 mt-auto border-t border-gray-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
       <button
-        onClick={handleClose}
+        onClick={handleLogout}
         className="flex items-center w-full px-4 py-3 text-gray-600 rounded-xl hover:bg-white/80 hover:shadow-sm transition-all duration-200 group"
       >
         <LogOut className="w-5 h-5 mr-3 text-blue-500 group-hover:text-indigo-500 transition-colors duration-200" />
         <span className="font-medium group-hover:text-gray-800 transition-colors duration-200">
-          Logout
+          Log out
         </span>
       </button>
     </div>
@@ -196,9 +237,15 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
         aria-label="Toggle menu"
       >
         {isOpen ? (
-          <X size={20} className="text-blue-600 transition-transform duration-200 rotate-90" />
+          <X
+            size={20}
+            className="text-blue-600 transition-transform duration-200 rotate-90"
+          />
         ) : (
-          <Menu size={20} className="text-blue-600 transition-transform duration-200" />
+          <Menu
+            size={20}
+            className="text-blue-600 transition-transform duration-200"
+          />
         )}
       </button>
 
@@ -207,7 +254,11 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
         className={`
           fixed top-0 left-0 h-full bg-white/95 backdrop-blur-sm shadow-xl z-40 
           transition-all duration-300 ease-in-out transform
-          ${isOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full md:translate-x-0 md:w-64'}
+          ${
+            isOpen
+              ? "w-72 translate-x-0"
+              : "w-72 -translate-x-full md:translate-x-0 md:w-64"
+          }
         `}
         role="navigation"
         aria-label="Admin navigation"
@@ -227,4 +278,4 @@ export default function AdminSidebar({ isOpen, onOpenChange }: AdminSidebarProps
       </aside>
     </>
   );
-} 
+}
