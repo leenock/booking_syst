@@ -2,6 +2,15 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require('uuid');
+
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Validate UUID
+const isValidUUID = (uuid) => {
+  return UUID_REGEX.test(uuid);
+};
 
 // Get all visitors
 const getAllVisitors = async (req, res) => {
@@ -28,6 +37,11 @@ const getAllVisitors = async (req, res) => {
 const getVisitorById = async (req, res) => {
     try {
         const { id } = req.params;
+        
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ error: 'Invalid visitor ID format' });
+        }
+
         const visitor = await prisma.visitorAccount.findUnique({
             where: { id },
             select: {
@@ -92,7 +106,12 @@ const createVisitor = async (req, res) => {
 
         res.status(201).json(visitor);
     } catch (error) {
-        console.error("Error creating visitor:", error);
+        if (error.code === 'P2002') {
+            console.warn("Duplicate entry detected (email or phone number already exists).");
+            return res.status(400).json({ error: 'Email or phone number already exists' });
+        }
+
+        console.error("Unexpected error creating visitor:", error);
         res.status(500).json({ error: 'Failed to create visitor' });
     }
 };
@@ -102,6 +121,10 @@ const updateVisitor = async (req, res) => {
     try {
         const { id } = req.params;
         const { firstName, lastName, email, phone, isActive } = req.body;
+
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ error: 'Invalid visitor ID format' });
+        }
 
         // Check if visitor exists
         const existingVisitor = await prisma.visitorAccount.findUnique({
@@ -147,6 +170,9 @@ const updateVisitor = async (req, res) => {
         res.json(visitor);
     } catch (error) {
         console.error("Error updating visitor:", error);
+        if (error.code === 'P2002') {
+            return res.status(400).json({ error: 'Email or phone number already exists' });
+        }
         res.status(500).json({ error: 'Failed to update visitor' });
     }
 };
@@ -155,6 +181,10 @@ const updateVisitor = async (req, res) => {
 const deleteVisitor = async (req, res) => {
     try {
         const { id } = req.params;
+
+        if (!isValidUUID(id)) {
+            return res.status(400).json({ error: 'Invalid visitor ID format' });
+        }
 
         // Check if visitor exists
         const existingVisitor = await prisma.visitorAccount.findUnique({

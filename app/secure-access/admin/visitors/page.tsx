@@ -10,7 +10,7 @@ import Toast from "@/app/components/ui/Toast";
 
 
 interface VisitorAccount {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;

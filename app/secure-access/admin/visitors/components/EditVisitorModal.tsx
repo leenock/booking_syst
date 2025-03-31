@@ -6,7 +6,7 @@ import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
 
 interface Visitor {
-  id: number;
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -80,7 +80,7 @@ export default function EditVisitorModal({
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/visitors/${visitor.id}`, {
+      const response = await fetch(`http://localhost:5000/api/visitor-accounts/${visitor.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

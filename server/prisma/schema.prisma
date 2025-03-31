@@ -18,7 +18,7 @@ model Admin {
 }
 
 model VisitorAccount {
-  id        String    @id @default(uuid()) // Change from Int to String
+  id        String    @id @default(uuid())
   firstName String?
   lastName  String?
   phone     String?   @unique
@@ -28,7 +28,6 @@ model VisitorAccount {
   createdAt DateTime  @default(now())
   bookings  Booking[]
 }
-
 
 model Room {
   id          String    @id @default(uuid())
@@ -51,7 +50,7 @@ model Booking {
   paymentMethod    String
   roomType         RoomType
   roomPrice        Float
-  visitorAccountId String? // Change from Int? to String?
+  visitorAccountId String?
   roomId           String
   checkIn          DateTime
   checkOut         DateTime
@@ -59,7 +58,6 @@ model Booking {
   room             Room            @relation(fields: [roomId], references: [id])
   visitorAccount   VisitorAccount? @relation(fields: [visitorAccountId], references: [id])
 }
-
 
 enum Role {
   SUPER_ADMIN

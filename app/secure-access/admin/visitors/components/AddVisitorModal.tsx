@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
+import { validateVisitorForm } from "@/app/utils/validation";
 
 interface VisitorFormData {
   firstName: string;
@@ -36,6 +37,7 @@ export default function AddVisitorModal({
     isActive: true,
   });
   const [error, setError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -54,62 +56,36 @@ export default function AddVisitorModal({
         ? value === "true"
         : value,
     }));
+    // Clear field error when user starts typing
+    if (fieldError === name) {
+      setFieldError(null);
+    }
   };
 
-  const validateForm = () => {
-    if (!formData.firstName || !formData.lastName) {
-      setError("First name and last name are required");
-      setToast({
-        message: "First name and last name are required",
-        type: "error",
-      });
-      return false;
-    }
-
-    if (!formData.email || !formData.password) {
-      setError("Email and password are required");
-      setToast({
-        message: "Email and password are required",
-        type: "error",
-      });
-      return false;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError("Please enter a valid email address");
-      setToast({
-        message: "Please enter a valid email address",
-        type: "error",
-      });
-      return false;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      setToast({
-        message: "Password must be at least 6 characters long",
-        type: "error",
-      });
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setToast({
-        message: "Passwords do not match",
-        type: "error",
-      });
-      return false;
-    }
-
-    return true;
+  const handleClose = () => {
+    setToast(null); // Clear toast when modal is closed
+    setError(null);
+    setFieldError(null);
+    onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldError(null);
+    setToast(null); // Clear any existing toast
 
-    if (!validateForm()) {
+    // Validate form
+    const validationError = validateVisitorForm(formData);
+    if (validationError) {
+      setError(validationError.message);
+      if (validationError.field) {
+        setFieldError(validationError.field);
+      }
+      setToast({
+        message: validationError.message,
+        type: "error",
+      });
       return;
     }
 
@@ -124,7 +100,6 @@ export default function AddVisitorModal({
         password: formData.password,
         isActive: formData.isActive,
       };
-      console.log('Sending request with payload:', requestPayload);
 
       const response = await fetch("http://localhost:5000/api/visitor-accounts", {
         method: "POST",
@@ -136,10 +111,21 @@ export default function AddVisitorModal({
       });
 
       const data = await response.json();
-      console.log('Server response:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || `Failed to add visitor account: ${response.status} ${response.statusText}`);
+        // Handle specific error cases
+        if (data.error === 'Email or phone number already exists') {
+          setFieldError('email');
+          setError('This email is already registered');
+          setToast({
+            message: 'This email is already registered',
+            type: 'error',
+          });
+          return;
+        }
+        
+        // Handle other API errors
+        throw new Error(data.error || 'Failed to add visitor account');
       }
 
       setToast({
@@ -160,15 +146,16 @@ export default function AddVisitorModal({
 
       // Close modal after delay
       setTimeout(() => {
-        onClose();
+        handleClose();
         onVisitorAdded();
       }, 1000);
     } catch (error) {
-      console.error("Error details:", error);
-      setError(error instanceof Error ? error.message : "Failed to add visitor account");
+      // Handle unexpected errors
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add visitor account';
+      setError(errorMessage);
       setToast({
-        message: error instanceof Error ? error.message : "Failed to add visitor account",
-        type: "error",
+        message: errorMessage,
+        type: 'error',
       });
     } finally {
       setIsSubmitting(false);
@@ -185,7 +172,7 @@ export default function AddVisitorModal({
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">Add New Visitor Account</h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-500 transition-colors"
             >
               <X className="w-6 h-6" />
@@ -207,12 +194,14 @@ export default function AddVisitorModal({
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Enter first name"
+                               transition-all duration-200
+                               ${fieldError === "firstName" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "firstName" && (
+                      <p className="mt-1 text-sm text-red-500">First name is required</p>
+                    )}
                   </div>
 
                   <div>
@@ -224,12 +213,14 @@ export default function AddVisitorModal({
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Enter last name"
+                               transition-all duration-200
+                               ${fieldError === "lastName" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "lastName" && (
+                      <p className="mt-1 text-sm text-red-500">Last name is required</p>
+                    )}
                   </div>
 
                   <div>
@@ -241,29 +232,33 @@ export default function AddVisitorModal({
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Enter email address"
+                               transition-all duration-200
+                               ${fieldError === "email" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "email" && (
+                      <p className="mt-1 text-sm text-red-500">Please enter a valid email address</p>
+                    )}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Phone Number
+                      Phone
                     </label>
                     <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Enter phone number"
+                               transition-all duration-200
+                               ${fieldError === "phone" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "phone" && (
+                      <p className="mt-1 text-sm text-red-500">Phone number is required</p>
+                    )}
                   </div>
                 </div>
 
@@ -278,13 +273,14 @@ export default function AddVisitorModal({
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      required
-                      minLength={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Enter password"
+                               transition-all duration-200
+                               ${fieldError === "password" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "password" && (
+                      <p className="mt-1 text-sm text-red-500">Password must be at least 6 characters long</p>
+                    )}
                   </div>
 
                   <div>
@@ -296,13 +292,14 @@ export default function AddVisitorModal({
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      required
-                      minLength={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                      placeholder="Confirm password"
+                               transition-all duration-200
+                               ${fieldError === "confirmPassword" ? "border-red-500" : "border-gray-300"}`}
                     />
+                    {fieldError === "confirmPassword" && (
+                      <p className="mt-1 text-sm text-red-500">Passwords do not match</p>
+                    )}
                   </div>
 
                   <div>
@@ -329,10 +326,10 @@ export default function AddVisitorModal({
               )}
 
               {/* Footer */}
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-4 mt-6">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-lg 
                            hover:bg-gray-200 transition-colors font-medium"
                 >
@@ -369,4 +366,4 @@ export default function AddVisitorModal({
       )}
     </>
   );
-} 
+}
