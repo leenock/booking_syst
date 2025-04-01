@@ -1,19 +1,18 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 const {
-    getAllVisitors,
-    getVisitorById,
-    createVisitor,
-    updateVisitor,
-    deleteVisitor
-} = require('../controllers/visitorController');
-const { validateVisitor } = require('../middleware/validation');
+  getAllVisitors,
+  getVisitorById,
+  createVisitor,
+  deleteVisitor,
+  updateVisitor,
+} = require("../controllers/visitorController");
 
-
+// Basic CRUD routes
 router.get('/', getAllVisitors); // Get all visitors
-router.get('/:id', getVisitorById); // Get visitor by ID
-router.post('/', validateVisitor, createVisitor); // Create new visitor
-router.put('/:id', validateVisitor, updateVisitor); // Update visitor
+router.get('/:id', getVisitorById); // Get single visitor
+router.post('/', createVisitor); // Create new visitor
+router.put('/:id', updateVisitor); // Update visitor
 router.delete('/:id', deleteVisitor); // Delete visitor
 
-module.exports = router; 
+module.exports = router;

@@ -42,12 +42,15 @@ export default function DeleteVisitorModal({
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/visitor-accounts/${visitor.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${AuthService.getToken()}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/visitor-accounts/${visitor.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${AuthService.getToken()}`,
+          },
+        }
+      );
 
       if (!response.ok) {
         const data = await response.json();
@@ -58,7 +61,7 @@ export default function DeleteVisitorModal({
         message: "Visitor deleted successfully",
         type: "success",
       });
-      
+
       // Close modal after delay
       setTimeout(() => {
         onClose();
@@ -66,7 +69,9 @@ export default function DeleteVisitorModal({
       }, 1000);
     } catch (error) {
       console.error("Error deleting visitor:", error);
-      setError(error instanceof Error ? error.message : "Failed to delete visitor");
+      setError(
+        error instanceof Error ? error.message : "Failed to delete visitor"
+      );
       setToast({
         message: "Failed to delete visitor",
         type: "error",
@@ -84,7 +89,9 @@ export default function DeleteVisitorModal({
         <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Delete Visitor</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Delete Visitor
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500 transition-colors"
@@ -97,15 +104,18 @@ export default function DeleteVisitorModal({
           <div className="p-6">
             <div className="space-y-4">
               <p className="text-gray-600">
-                Are you sure you want to delete this visitor? This action cannot be undone.
+                Are you sure you want to delete this visitor? This action cannot
+                be undone.
               </p>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Visitor Details</h3>
+                <h3 className="font-medium text-gray-900 mb-2">
+                  Visitor Details
+                </h3>
                 <div className="space-y-2 text-sm text-gray-600">
                   <p>
-                    <span className="font-medium">Name:</span> {visitor.firstName}{" "}
-                    {visitor.lastName}
+                    <span className="font-medium">Name:</span>{" "}
+                    {visitor.firstName} {visitor.lastName}
                   </p>
                   <p>
                     <span className="font-medium">Email:</span> {visitor.email}
@@ -160,4 +170,4 @@ export default function DeleteVisitorModal({
       )}
     </>
   );
-} 
+}

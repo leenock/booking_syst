@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
+import { validateVisitorForm, hasFormErrors, FormErrors, VisitorFormData } from "@/app/utils/validation";
 
 interface Visitor {
   id: string;
@@ -13,14 +14,6 @@ interface Visitor {
   phone: string;
   isActive: boolean;
   createdAt: string;
-}
-
-interface VisitorFormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  isActive: boolean;
 }
 
 interface EditVisitorModalProps {
@@ -43,7 +36,7 @@ export default function EditVisitorModal({
     phone: "",
     isActive: true,
   });
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
@@ -63,34 +56,58 @@ export default function EditVisitorModal({
   }, [visitor]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [name]: type === "select-one" ? value === "true" : value,
     }));
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleClose = () => {
+    setToast(null);
+    setErrors({});
+    onClose();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!visitor) return;
 
+    const validationErrors = validateVisitorForm(formData, true);
+    setErrors(validationErrors);
+
+    if (hasFormErrors(validationErrors)) {
+      setToast({
+        message: "Please fix the errors before submitting",
+        type: "error",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    setError(null);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/visitor-accounts/${visitor.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${AuthService.getToken()}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/visitor-accounts/${visitor.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${AuthService.getToken()}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const data = await response.json();
 
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.error || "Failed to update visitor");
       }
 
@@ -98,17 +115,16 @@ export default function EditVisitorModal({
         message: "Visitor updated successfully",
         type: "success",
       });
-      
-      // Close modal after delay
+
       setTimeout(() => {
-        onClose();
+        handleClose();
         onVisitorUpdated();
       }, 1000);
     } catch (error) {
-      console.error("Error updating visitor:", error);
-      setError(error instanceof Error ? error.message : "Failed to update visitor");
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update visitor";
       setToast({
-        message: "Failed to update visitor",
+        message: errorMessage,
         type: "error",
       });
     } finally {
@@ -121,12 +137,14 @@ export default function EditVisitorModal({
   return (
     <>
       <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-md">
+        <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-4xl">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Visitor</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Edit Visitor
+            </h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-500 transition-colors"
             >
               <X className="w-6 h-6" />
@@ -135,115 +153,124 @@ export default function EditVisitorModal({
 
           {/* Body */}
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
-                  </label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                             transition-all duration-200"
-                    placeholder="Enter first name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                             transition-all duration-200"
-                    placeholder="Enter last name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                             transition-all duration-200"
-                    placeholder="Enter email address"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                             focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                             transition-all duration-200"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="isActive"
-                      className="ml-2 block text-sm text-gray-900"
-                    >
-                      Account Active
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name
                     </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                               transition-all duration-200
+                               ${errors.firstName ? "border-red-500" : "border-gray-300"}`}
+                    />
+                    {errors.firstName && (
+                      <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                               transition-all duration-200
+                               ${errors.lastName ? "border-red-500" : "border-gray-300"}`}
+                    />
+                    {errors.lastName && (
+                      <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                               transition-all duration-200
+                               ${errors.email ? "border-red-500" : "border-gray-300"}`}
+                    />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                               transition-all duration-200
+                               ${errors.phone ? "border-red-500" : "border-gray-300"}`}
+                    />
+                    {errors.phone && (
+                      <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      name="isActive"
+                      value={formData.isActive?.toString()}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
+                               transition-all duration-200"
+                    >
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {error && (
-                <div className="text-red-500 text-sm mt-2">{error}</div>
-              )}
-
               {/* Footer */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex justify-end gap-4 mt-6">
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg 
-                           hover:bg-gray-200 transition-colors"
+                  onClick={handleClose}
+                  className="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-lg 
+                           hover:bg-gray-200 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg 
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg 
                            hover:bg-blue-700 transition-colors disabled:opacity-50 
-                           disabled:cursor-not-allowed flex items-center gap-2"
+                           disabled:cursor-not-allowed flex items-center gap-2 font-medium"
                 >
                   {isSubmitting ? (
                     <>
@@ -269,4 +296,4 @@ export default function EditVisitorModal({
       )}
     </>
   );
-} 
+}
