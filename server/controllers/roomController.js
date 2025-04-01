@@ -5,19 +5,34 @@ const prisma = new PrismaClient();
 const getAllRooms = async (req, res) => {
     try {
         const rooms = await prisma.room.findMany({
-            include: {
-                bookings: {
-                    select: {
-                        checkIn: true,
-                        checkOut: true,
-                        isActive: true
-                    }
-                }
+            orderBy: {
+                roomNumber: 'asc'
             }
         });
+
         res.status(200).json(rooms);
     } catch (error) {
+        console.error('Error fetching rooms:', error);
         res.status(500).json({ error: 'Failed to fetch rooms' });
+    }
+};
+
+// Get available rooms
+const getAvailableRooms = async (req, res) => {
+    try {
+        const rooms = await prisma.room.findMany({
+            where: {
+                status: 'AVAILABLE'
+            },
+            orderBy: {
+                roomNumber: 'asc'
+            }
+        });
+
+        res.status(200).json(rooms);
+    } catch (error) {
+        console.error('Error fetching available rooms:', error);
+        res.status(500).json({ error: 'Failed to fetch available rooms' });
     }
 };
 
@@ -26,16 +41,7 @@ const getRoomById = async (req, res) => {
     try {
         const { id } = req.params;
         const room = await prisma.room.findUnique({
-            where: { id },
-            include: {
-                bookings: {
-                    select: {
-                        checkIn: true,
-                        checkOut: true,
-                        isActive: true
-                    }
-                }
-            }
+            where: { id }
         });
 
         if (!room) {
@@ -44,6 +50,7 @@ const getRoomById = async (req, res) => {
 
         res.status(200).json(room);
     } catch (error) {
+        console.error('Error fetching room:', error);
         res.status(500).json({ error: 'Failed to fetch room' });
     }
 };
@@ -51,12 +58,7 @@ const getRoomById = async (req, res) => {
 // Create new room
 const createRoom = async (req, res) => {
     try {
-        const { roomNumber, type, price, isAvailable } = req.body;
-
-        // Validate required fields
-        if (!roomNumber || !type || !price) {
-            return res.status(400).json({ error: 'Room number, type, and price are required' });
-        }
+        const { roomNumber, type, price, capacity, status, description, amenities } = req.body;
 
         // Check if room number already exists
         const existingRoom = await prisma.room.findUnique({
@@ -67,18 +69,21 @@ const createRoom = async (req, res) => {
             return res.status(400).json({ error: 'Room with this number already exists' });
         }
 
-        // Create room
         const room = await prisma.room.create({
             data: {
                 roomNumber,
                 type,
                 price,
-                isAvailable
+                capacity,
+                status,
+                description,
+                amenities
             }
         });
 
         res.status(201).json(room);
     } catch (error) {
+        console.error('Error creating room:', error);
         res.status(500).json({ error: 'Failed to create room' });
     }
 };
@@ -87,7 +92,7 @@ const createRoom = async (req, res) => {
 const updateRoom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { roomNumber, type, price, isAvailable } = req.body;
+        const { roomNumber, type, price, capacity, status, description, amenities } = req.body;
 
         // Check if room exists
         const existingRoom = await prisma.room.findUnique({
@@ -105,23 +110,26 @@ const updateRoom = async (req, res) => {
             });
 
             if (roomWithNumber) {
-                return res.status(400).json({ error: 'Room number already in use' });
+                return res.status(400).json({ error: 'Room with this number already exists' });
             }
         }
 
-        // Update room
         const updatedRoom = await prisma.room.update({
             where: { id },
             data: {
                 roomNumber,
                 type,
                 price,
-                isAvailable
+                capacity,
+                status,
+                description,
+                amenities
             }
         });
 
         res.status(200).json(updatedRoom);
     } catch (error) {
+        console.error('Error updating room:', error);
         res.status(500).json({ error: 'Failed to update room' });
     }
 };
@@ -133,70 +141,29 @@ const deleteRoom = async (req, res) => {
 
         // Check if room exists
         const existingRoom = await prisma.room.findUnique({
-            where: { id },
-            include: {
-                bookings: true
-            }
+            where: { id }
         });
 
         if (!existingRoom) {
             return res.status(404).json({ error: 'Room not found' });
         }
 
-        // Check if room has any bookings
-        if (existingRoom.bookings.length > 0) {
-            return res.status(400).json({ error: 'Cannot delete room with existing bookings' });
-        }
-
-        // Delete room
         await prisma.room.delete({
             where: { id }
         });
 
         res.status(204).send();
     } catch (error) {
+        console.error('Error deleting room:', error);
         res.status(500).json({ error: 'Failed to delete room' });
-    }
-};
-
-// Get available rooms
-const getAvailableRooms = async (req, res) => {
-    try {
-        const { checkIn, checkOut } = req.query;
-
-        if (!checkIn || !checkOut) {
-            return res.status(400).json({ error: 'Check-in and check-out dates are required' });
-        }
-
-        const availableRooms = await prisma.room.findMany({
-            where: {
-                isAvailable: true,
-                bookings: {
-                    none: {
-                        OR: [
-                            {
-                                AND: [
-                                    { checkIn: { lte: new Date(checkOut) } },
-                                    { checkOut: { gte: new Date(checkIn) } }
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
-        });
-
-        res.status(200).json(availableRooms);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch available rooms' });
     }
 };
 
 module.exports = {
     getAllRooms,
+    getAvailableRooms,
     getRoomById,
     createRoom,
     updateRoom,
-    deleteRoom,
-    getAvailableRooms
+    deleteRoom
 }; 

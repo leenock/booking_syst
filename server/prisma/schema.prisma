@@ -33,8 +33,11 @@ model Room {
   id          String    @id @default(uuid())
   roomNumber  String    @unique
   type        RoomType
-  price       Float
-  isAvailable Boolean   @default(true)
+  price       Float     @default(0)
+  capacity    Int       @default(1)
+  status      RoomStatus @default(AVAILABLE)
+  description String?
+  amenities   Amenity[]
   createdAt   DateTime  @default(now())
   bookings    Booking[]
 }
@@ -65,7 +68,7 @@ enum Role {
 }
 
 enum RoomType {
-  SINGLE
+  STANDARD
   DELUXE
   SUITE
 }
@@ -73,4 +76,13 @@ enum RoomType {
 enum RoomStatus {
   AVAILABLE
   BOOKED
+  MAINTENANCE
+}
+
+enum Amenity {
+  WIFI
+  TV
+  AC
+  MINI_BAR
+  JACUZZI
 }

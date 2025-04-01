@@ -6,7 +6,7 @@ import Toast from "@/app/components/ui/Toast";
 interface Room {
   id: string;
   roomNumber: string;
-  roomType: string;
+  type: string;
   price: number;
   capacity: number;
   status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
@@ -146,13 +146,13 @@ export default function DeleteRoomModal({
                   <div>
                     <dt className="text-gray-500">Room Type</dt>
                     <dd className="mt-1 font-medium text-gray-900">
-                      {room.roomType}
+                      {room.type}
                     </dd>
                   </div>
                   <div>
                     <dt className="text-gray-500">Price</dt>
                     <dd className="mt-1 font-medium text-gray-900">
-                      ${room.price}
+                      Ksh {room.price}
                     </dd>
                   </div>
                   <div>

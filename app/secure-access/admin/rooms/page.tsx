@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, Filter, Edit, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Search, Filter, Edit, Trash2, Loader2 } from "lucide-react";
 import AddRoomModal from "./components/AddRoomModal";
 import EditRoomModal from "./components/EditRoomModal";
 import DeleteRoomModal from "./components/DeleteRoomModal";
@@ -9,54 +9,18 @@ import DeleteRoomModal from "./components/DeleteRoomModal";
 interface Room {
   id: string;
   roomNumber: string;
-  roomType: string;
+  type: string;
   price: number;
   capacity: number;
   status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
+  createdAt: string;
 }
 
-// Mock data for rooms
-const mockRooms: Room[] = [
-  {
-    id: "1",
-    roomNumber: "101",
-    roomType: "STANDARD",
-    price: 100,
-    capacity: 2,
-    status: "AVAILABLE",
-    description: "Standard room with basic amenities",
-    amenities: ["WiFi", "TV", "AC"],
-    images: [],
-  },
-  {
-    id: "2",
-    roomNumber: "102",
-    roomType: "DELUXE",
-    price: 150,
-    capacity: 3,
-    status: "OCCUPIED",
-    description: "Deluxe room with premium amenities",
-    amenities: ["WiFi", "TV", "AC", "Mini Bar"],
-    images: [],
-  },
-  {
-    id: "3",
-    roomNumber: "103",
-    roomType: "SUITE",
-    price: 250,
-    capacity: 4,
-    status: "MAINTENANCE",
-    description: "Luxury suite with all amenities",
-    amenities: ["WiFi", "TV", "AC", "Mini Bar", "Jacuzzi"],
-    images: [],
-  },
-];
-
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>(mockRooms);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
@@ -64,6 +28,31 @@ export default function RoomsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch rooms data
+  const fetchRooms = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch('http://localhost:5000/api/rooms');
+      if (!response.ok) {
+        throw new Error('Failed to fetch rooms');
+      }
+      const data = await response.json();
+      setRooms(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch rooms on component mount
+  useEffect(() => {
+    fetchRooms();
+  }, []);
 
   const handleAddClick = () => {
     setIsAddModalOpen(true);
@@ -86,13 +75,52 @@ export default function RoomsPage() {
     setSelectedRoom(null);
   };
 
+  const handleRoomAdded = () => {
+    fetchRooms();
+    handleModalClose();
+  };
+
+  const handleRoomUpdated = () => {
+    fetchRooms();
+    handleModalClose();
+  };
+
+  const handleRoomDeleted = () => {
+    fetchRooms();
+    handleModalClose();
+  };
+
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = room.roomNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.roomType.toLowerCase().includes(searchQuery.toLowerCase());
+      room.type.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === "all" || room.status === filterStatus;
-    const matchesType = filterType === "all" || room.roomType === filterType;
+    const matchesType = filterType === "all" || room.type === filterType;
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={fetchRooms}
+            className="mt-2 text-sm text-red-600 hover:text-red-800"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -140,7 +168,7 @@ export default function RoomsPage() {
             >
               <option value="all">All Status</option>
               <option value="AVAILABLE">Available</option>
-              <option value="OCCUPIED">Occupied</option>
+              <option value="BOOKED">Occupied</option>
               <option value="MAINTENANCE">Maintenance</option>
             </select>
           </div>
@@ -200,10 +228,10 @@ export default function RoomsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{room.roomType}</div>
+                    <div className="text-sm text-gray-900">{room.type}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">${room.price}</div>
+                    <div className="text-sm text-gray-900">Ksh {room.price}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -261,23 +289,31 @@ export default function RoomsPage() {
       </div>
 
       {/* Modals */}
-      <AddRoomModal
-        isOpen={isAddModalOpen}
-        onClose={handleModalClose}
-        onRoomAdded={() => {}}
-      />
-      <EditRoomModal
-        isOpen={isEditModalOpen}
-        onClose={handleModalClose}
-        onRoomUpdated={() => {}}
-        room={selectedRoom}
-      />
-      <DeleteRoomModal
-        isOpen={isDeleteModalOpen}
-        onClose={handleModalClose}
-        onRoomDeleted={() => {}}
-        room={selectedRoom}
-      />
+      {isAddModalOpen && (
+        <AddRoomModal
+          isOpen={isAddModalOpen}
+          onClose={handleModalClose}
+          onRoomAdded={handleRoomAdded}
+        />
+      )}
+
+      {isEditModalOpen && selectedRoom && (
+        <EditRoomModal
+          isOpen={isEditModalOpen}
+          onClose={handleModalClose}
+          onRoomUpdated={handleRoomUpdated}
+          room={selectedRoom}
+        />
+      )}
+
+      {isDeleteModalOpen && selectedRoom && (
+        <DeleteRoomModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleModalClose}
+          onRoomDeleted={handleRoomDeleted}
+          room={selectedRoom}
+        />
+      )}
     </div>
   );
 }

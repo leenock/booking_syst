@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { X } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
 
 interface RoomFormData {
   roomNumber: string;
-  roomType: string;
+  type: string;
   price: number;
   capacity: number;
-  status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
+  status: "AVAILABLE" | "BOOKED" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
@@ -29,7 +29,7 @@ export default function AddRoomModal({
 }: AddRoomModalProps) {
   const [formData, setFormData] = useState<RoomFormData>({
     roomNumber: "",
-    roomType: "STANDARD",
+    type: "STANDARD",
     price: 0,
     capacity: 1,
     status: "AVAILABLE",
@@ -37,27 +37,76 @@ export default function AddRoomModal({
     amenities: [],
     images: [],
   });
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
+  const roomNumberInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Clear form error when user starts typing
+    if (name === 'roomNumber') {
+      setFormError(null);
+    }
+    
+    // Handle numeric inputs
+    if (name === 'price' || name === 'capacity') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Number(value),
+      }));
+    } else {
+      // Handle other inputs
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.roomNumber?.trim()) {
+      setFormError("Room number is required");
+      return false;
+    }
+    if (!formData.type) {
+      setFormError("Room type is required");
+      return false;
+    }
+    if (!formData.price || formData.price <= 0) {
+      setFormError("Price must be greater than 0");
+      return false;
+    }
+    if (!formData.capacity || formData.capacity < 1) {
+      setFormError("Capacity must be at least 1");
+      return false;
+    }
+    if (!formData.status) {
+      setFormError("Status is required");
+      return false;
+    }
+    if (!formData.description?.trim()) {
+      setFormError("Description is required");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const response = await fetch("http://localhost:5000/api/rooms", {
@@ -69,9 +118,22 @@ export default function AddRoomModal({
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create room");
+        // Handle specific error messages from the server
+        if (data.error === "Room with this number already exists") {
+          setFormError("This room number is already in use. Please choose a different number.");
+          // Focus the room number input
+          roomNumberInputRef.current?.focus();
+        } else {
+          setFormError(data.error || "Failed to create room");
+        }
+        setToast({
+          message: "Failed to add room",
+          type: "error",
+        });
+        return;
       }
 
       setToast({
@@ -82,7 +144,7 @@ export default function AddRoomModal({
       // Reset form
       setFormData({
         roomNumber: "",
-        roomType: "STANDARD",
+        type: "STANDARD",
         price: 0,
         capacity: 1,
         status: "AVAILABLE",
@@ -98,7 +160,7 @@ export default function AddRoomModal({
       }, 1000);
     } catch (error) {
       console.error("Error creating room:", error);
-      setError(error instanceof Error ? error.message : "Failed to create room");
+      setFormError("An unexpected error occurred. Please try again.");
       setToast({
         message: "Failed to add room",
         type: "error",
@@ -128,6 +190,12 @@ export default function AddRoomModal({
           {/* Body */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-600">{formError}</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-4">
@@ -136,14 +204,16 @@ export default function AddRoomModal({
                       Room Number
                     </label>
                     <input
+                      ref={roomNumberInputRef}
                       type="text"
                       name="roomNumber"
                       value={formData.roomNumber}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+                      className={`w-full px-3 py-2 border rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200
+                               ${formError?.includes("room number") ? 'border-red-500' : 'border-gray-300'}`}
                       placeholder="Enter room number"
                     />
                   </div>
@@ -153,8 +223,8 @@ export default function AddRoomModal({
                       Room Type
                     </label>
                     <select
-                      name="roomType"
-                      value={formData.roomType}
+                      name="type"
+                      value={formData.type}
                       onChange={handleChange}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
@@ -217,7 +287,7 @@ export default function AddRoomModal({
                                transition-all duration-200"
                     >
                       <option value="AVAILABLE">Available</option>
-                      <option value="OCCUPIED">Occupied</option>
+                      <option value="BOOKED">Booked</option>
                       <option value="MAINTENANCE">Maintenance</option>
                     </select>
                   </div>
@@ -247,7 +317,7 @@ export default function AddRoomModal({
                       Amenities
                     </label>
                     <div className="space-y-2">
-                      {["WiFi", "TV", "AC", "Mini Bar", "Jacuzzi"].map((amenity) => (
+                      {["WIFI", "TV", "AC", "MINI_BAR", "JACUZZI"].map((amenity) => (
                         <label key={amenity} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
@@ -268,7 +338,9 @@ export default function AddRoomModal({
                             className="rounded border-gray-300 text-blue-600 
                                      focus:ring-blue-500/20"
                           />
-                          <span className="text-sm text-gray-700">{amenity}</span>
+                          <span className="text-sm text-gray-700">
+                            {amenity.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -276,17 +348,13 @@ export default function AddRoomModal({
                 </div>
               </div>
 
-              {error && (
-                <div className="text-red-500 text-sm mt-2">{error}</div>
-              )}
-
               {/* Footer */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={onClose}
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg 
-                           hover:bg-gray-200 transition-colors"
+                           hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -295,7 +363,7 @@ export default function AddRoomModal({
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg 
                            hover:bg-blue-700 transition-colors disabled:opacity-50 
-                           disabled:cursor-not-allowed flex items-center gap-2"
+                           disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

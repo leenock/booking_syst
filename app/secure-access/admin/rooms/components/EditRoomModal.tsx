@@ -8,7 +8,7 @@ import Toast from "@/app/components/ui/Toast";
 interface Room {
   id: string;
   roomNumber: string;
-  roomType: string;
+  type: string;
   price: number;
   capacity: number;
   status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
@@ -19,7 +19,7 @@ interface Room {
 
 interface RoomFormData {
   roomNumber: string;
-  roomType: string;
+  type: string;
   price: number;
   capacity: number;
   status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
@@ -43,7 +43,7 @@ export default function EditRoomModal({
 }: EditRoomModalProps) {
   const [formData, setFormData] = useState<RoomFormData>({
     roomNumber: "",
-    roomType: "STANDARD",
+    type: "STANDARD",
     price: 0,
     capacity: 1,
     status: "AVAILABLE",
@@ -51,18 +51,17 @@ export default function EditRoomModal({
     amenities: [],
     images: [],
   });
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (room) {
       setFormData({
         roomNumber: room.roomNumber,
-        roomType: room.roomType,
+        type: room.type,
         price: room.price,
         capacity: room.capacity,
         status: room.status,
@@ -73,22 +72,84 @@ export default function EditRoomModal({
     }
   }, [room]);
 
+  // Reset form and toast state when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        roomNumber: "",
+        type: "STANDARD",
+        price: 0,
+        capacity: 1,
+        status: "AVAILABLE",
+        description: "",
+        amenities: [],
+        images: [],
+      });
+      setFormError(null);
+      setShowToast(false);
+      setToastMessage("");
+      setToastType("success");
+    }
+  }, [isOpen]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Handle numeric inputs
+    if (name === 'price' || name === 'capacity') {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: Number(value),
+      }));
+    } else {
+      // Handle other inputs
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    if (!formData.roomNumber?.trim()) {
+      setFormError("Room number is required");
+      return false;
+    }
+    if (!formData.type) {
+      setFormError("Room type is required");
+      return false;
+    }
+    if (!formData.price || formData.price <= 0) {
+      setFormError("Price must be greater than 0");
+      return false;
+    }
+    if (!formData.capacity || formData.capacity < 1) {
+      setFormError("Capacity must be at least 1");
+      return false;
+    }
+    if (!formData.status) {
+      setFormError("Status is required");
+      return false;
+    }
+    if (!formData.description?.trim()) {
+      setFormError("Description is required");
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!room) return;
 
-    setIsSubmitting(true);
-    setError(null);
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsUpdating(true);
+    setFormError(null);
 
     try {
       const response = await fetch(`http://localhost:5000/api/rooms/${room.id}`, {
@@ -105,25 +166,23 @@ export default function EditRoomModal({
         throw new Error(data.error || "Failed to update room");
       }
 
-      setToast({
-        message: "Room updated successfully",
-        type: "success",
-      });
-      
-      // Close modal after delay
+      setToastMessage("Room updated successfully");
+      setToastType("success");
+      setShowToast(true);
+
+      // Wait for a moment to show the success message before closing
       setTimeout(() => {
-        onClose();
         onRoomUpdated();
+        onClose();
       }, 1000);
     } catch (error) {
       console.error("Error updating room:", error);
-      setError(error instanceof Error ? error.message : "Failed to update room");
-      setToast({
-        message: "Failed to update room",
-        type: "error",
-      });
+      setFormError(error instanceof Error ? error.message : "Failed to update room");
+      setToastMessage("Failed to update room");
+      setToastType("error");
+      setShowToast(true);
     } finally {
-      setIsSubmitting(false);
+      setIsUpdating(false);
     }
   };
 
@@ -131,22 +190,45 @@ export default function EditRoomModal({
 
   return (
     <>
-      <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Room</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-500 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl relative">
+          {/* Modal Header */}
+          <div className="px-6 py-5 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Edit Room
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Update room information
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                disabled={isUpdating}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Body */}
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Modal Body */}
+          <div className="px-6 py-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {formError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-sm text-red-600">{formError}</p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-4">
@@ -160,9 +242,10 @@ export default function EditRoomModal({
                       value={formData.roomNumber}
                       onChange={handleChange}
                       required
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Enter room number"
                     />
                   </div>
@@ -172,13 +255,14 @@ export default function EditRoomModal({
                       Room Type
                     </label>
                     <select
-                      name="roomType"
-                      value={formData.roomType}
+                      name="type"
+                      value={formData.type}
                       onChange={handleChange}
                       required
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                     >
                       <option value="STANDARD">Standard</option>
                       <option value="DELUXE">Deluxe</option>
@@ -197,9 +281,10 @@ export default function EditRoomModal({
                       onChange={handleChange}
                       required
                       min="0"
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Enter room price"
                     />
                   </div>
@@ -215,9 +300,10 @@ export default function EditRoomModal({
                       onChange={handleChange}
                       required
                       min="1"
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Enter room capacity"
                     />
                   </div>
@@ -231,12 +317,13 @@ export default function EditRoomModal({
                       value={formData.status}
                       onChange={handleChange}
                       required
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                     >
                       <option value="AVAILABLE">Available</option>
-                      <option value="OCCUPIED">Occupied</option>
+                      <option value="BOOKED">Booked</option>
                       <option value="MAINTENANCE">Maintenance</option>
                     </select>
                   </div>
@@ -254,9 +341,10 @@ export default function EditRoomModal({
                       onChange={handleChange}
                       required
                       rows={4}
+                      disabled={isUpdating}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg 
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                               transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder="Enter room description"
                     />
                   </div>
@@ -266,7 +354,7 @@ export default function EditRoomModal({
                       Amenities
                     </label>
                     <div className="space-y-2">
-                      {["WiFi", "TV", "AC", "Mini Bar", "Jacuzzi"].map((amenity) => (
+                      {["WIFI", "TV", "AC", "MINI_BAR", "JACUZZI"].map((amenity) => (
                         <label key={amenity} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
@@ -284,10 +372,13 @@ export default function EditRoomModal({
                                 }));
                               }
                             }}
+                            disabled={isUpdating}
                             className="rounded border-gray-300 text-blue-600 
-                                     focus:ring-blue-500/20"
+                                     focus:ring-blue-500/20 disabled:opacity-50"
                           />
-                          <span className="text-sm text-gray-700">{amenity}</span>
+                          <span className="text-sm text-gray-700">
+                            {amenity.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -295,30 +386,30 @@ export default function EditRoomModal({
                 </div>
               </div>
 
-              {error && (
-                <div className="text-red-500 text-sm mt-2">{error}</div>
-              )}
-
               {/* Footer */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg 
-                           hover:bg-gray-200 transition-colors"
+                  disabled={isUpdating}
+                  className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg 
-                           hover:bg-blue-700 transition-colors disabled:opacity-50 
+                  disabled={isUpdating}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                           transition-all duration-200 focus:outline-none focus:ring-2 
+                           focus:ring-blue-500/20 font-medium cursor-pointer disabled:opacity-50 
                            disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {isSubmitting ? (
+                  {isUpdating ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
                       Updating...
                     </>
                   ) : (
@@ -330,14 +421,6 @@ export default function EditRoomModal({
           </div>
         </div>
       </div>
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </>
   );
 } 

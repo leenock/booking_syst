@@ -84,7 +84,7 @@ const validateUserUpdate = async (req, res, next) => {
 
 // Room validation middleware
 const validateRoomCreation = async (req, res, next) => {
-    const { roomNumber, type, price, isAvailable } = req.body;
+    const { roomNumber, type, price, capacity, status, description, amenities } = req.body;
     const errors = [];
 
     if (!roomNumber?.trim()) errors.push('Room number is required');
@@ -93,6 +93,17 @@ const validateRoomCreation = async (req, res, next) => {
 
     if (roomNumber && !isValidRoomNumber(roomNumber)) errors.push('Invalid room number');
     if (price !== undefined && !isValidPrice(price)) errors.push('Invalid price');
+    if (type && !['STANDARD', 'DELUXE', 'SUITE'].includes(type)) errors.push('Invalid room type');
+    if (status && !['AVAILABLE', 'BOOKED', 'MAINTENANCE'].includes(status)) errors.push('Invalid room status');
+    if (capacity !== undefined && (typeof capacity !== 'number' || capacity < 1)) errors.push('Capacity must be a positive number');
+    if (amenities && !Array.isArray(amenities)) errors.push('Amenities must be an array');
+    if (amenities) {
+        const validAmenities = ['WIFI', 'TV', 'AC', 'MINI_BAR', 'JACUZZI'];
+        const invalidAmenities = amenities.filter(amenity => !validAmenities.includes(amenity));
+        if (invalidAmenities.length > 0) {
+            errors.push(`Invalid amenities: ${invalidAmenities.join(', ')}`);
+        }
+    }
 
     if (errors.length > 0) {
         return res.status(400).json({ errors });
