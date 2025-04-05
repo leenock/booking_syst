@@ -12,7 +12,7 @@ interface Room {
   type: string;
   price: number;
   capacity: number;
-  status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
+  status: "AVAILABLE" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
@@ -36,14 +36,23 @@ export default function RoomsPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:5000/api/rooms');
+      const response = await fetch('http://localhost:5000/api/rooms', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch rooms');
       }
-      const data = await response.json();
-      setRooms(data);
+      const result = await response.json();
+      if (result.success) {
+        setRooms(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch rooms');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      setRooms([]); // Set empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +177,6 @@ export default function RoomsPage() {
             >
               <option value="all">All Status</option>
               <option value="AVAILABLE">Available</option>
-              <option value="BOOKED">Occupied</option>
               <option value="MAINTENANCE">Maintenance</option>
             </select>
           </div>
@@ -243,8 +251,6 @@ export default function RoomsPage() {
                       className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         room.status === "AVAILABLE"
                           ? "bg-green-100 text-green-800"
-                          : room.status === "OCCUPIED"
-                          ? "bg-blue-100 text-blue-800"
                           : "bg-yellow-100 text-yellow-800"
                       }`}
                     >

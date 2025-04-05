@@ -10,7 +10,7 @@ interface RoomFormData {
   type: string;
   price: number;
   capacity: number;
-  status: "AVAILABLE" | "BOOKED" | "MAINTENANCE";
+  status: "AVAILABLE" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
@@ -287,7 +287,6 @@ export default function AddRoomModal({
                                transition-all duration-200"
                     >
                       <option value="AVAILABLE">Available</option>
-                      <option value="BOOKED">Booked</option>
                       <option value="MAINTENANCE">Maintenance</option>
                     </select>
                   </div>

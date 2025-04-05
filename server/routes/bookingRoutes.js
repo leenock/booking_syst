@@ -6,16 +6,17 @@ const {
     createBooking,
     updateBooking,
     deleteBooking,
-    getUserBookings
+    getUserBookings,
+    getBookingsByVisitorEmail
 } = require('../controllers/bookingController');
-const { validateBookingCreation } = require('../utils/validationMiddleware');
 
 // All routes are public for now
-router.post('/', validateBookingCreation, createBooking);
+router.post('/', createBooking);
 router.get('/user/:userId', getUserBookings);
+router.get('/visitor/:email', getBookingsByVisitorEmail);
 router.get('/', getAllBookings);
 router.get('/:id', getBookingById);
-router.put('/:id', validateBookingCreation, updateBooking);
+router.put('/:id', updateBooking);
 router.delete('/:id', deleteBooking);
 
 module.exports = router; 

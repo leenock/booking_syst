@@ -86,10 +86,10 @@ const isValidGuestCount = (adults, kids) => {
     );
 };
 
-// Payment method validation
-const isValidPaymentMethod = (method) => {
-    const validMethods = ['Credit Card', 'M-Pesa', 'Cash'];
-    return validMethods.includes(method);
+// Room type validation
+const isValidRoomType = (type) => {
+    const validTypes = ['STANDARD', 'DELUXE', 'SUITE'];
+    return validTypes.includes(type.toUpperCase());
 };
 
 module.exports = {
@@ -104,5 +104,5 @@ module.exports = {
     isValidRoomNumber,
     isValidPrice,
     isValidGuestCount,
-    isValidPaymentMethod
+    isValidRoomType
 }; 

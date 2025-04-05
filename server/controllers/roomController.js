@@ -10,10 +10,18 @@ const getAllRooms = async (req, res) => {
             }
         });
 
-        res.status(200).json(rooms);
+        res.status(200).json({
+            success: true,
+            count: rooms.length,
+            data: rooms
+        });
     } catch (error) {
         console.error('Error fetching rooms:', error);
-        res.status(500).json({ error: 'Failed to fetch rooms' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch rooms',
+            message: error.message 
+        });
     }
 };
 
@@ -40,25 +48,57 @@ const getAvailableRooms = async (req, res) => {
 const getRoomById = async (req, res) => {
     try {
         const { id } = req.params;
+        
         const room = await prisma.room.findUnique({
             where: { id }
         });
 
         if (!room) {
-            return res.status(404).json({ error: 'Room not found' });
+            return res.status(404).json({ 
+                success: false,
+                error: 'Room not found' 
+            });
         }
 
-        res.status(200).json(room);
+        res.status(200).json({
+            success: true,
+            data: room
+        });
     } catch (error) {
         console.error('Error fetching room:', error);
-        res.status(500).json({ error: 'Failed to fetch room' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to fetch room',
+            message: error.message 
+        });
     }
 };
 
 // Create new room
 const createRoom = async (req, res) => {
     try {
-        const { roomNumber, type, price, capacity, status, description, amenities } = req.body;
+        const {
+            roomNumber,
+            type,
+            price,
+            capacity,
+            description,
+            amenities
+        } = req.body;
+
+        // Basic validation
+        if (!roomNumber || !type || !price || !capacity) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields',
+                details: {
+                    roomNumber: !roomNumber ? 'Room number is required' : null,
+                    type: !type ? 'Room type is required' : null,
+                    price: !price ? 'Price is required' : null,
+                    capacity: !capacity ? 'Capacity is required' : null
+                }
+            });
+        }
 
         // Check if room number already exists
         const existingRoom = await prisma.room.findUnique({
@@ -66,25 +106,35 @@ const createRoom = async (req, res) => {
         });
 
         if (existingRoom) {
-            return res.status(400).json({ error: 'Room with this number already exists' });
+            return res.status(400).json({
+                success: false,
+                error: 'Room number already exists'
+            });
         }
 
         const room = await prisma.room.create({
             data: {
                 roomNumber,
-                type,
-                price,
-                capacity,
-                status,
-                description,
-                amenities
+                type: type.toUpperCase(),
+                price: parseFloat(price),
+                capacity: parseInt(capacity),
+                description: description || null,
+                amenities: amenities || []
             }
         });
 
-        res.status(201).json(room);
+        res.status(201).json({
+            success: true,
+            message: 'Room created successfully',
+            data: room
+        });
     } catch (error) {
         console.error('Error creating room:', error);
-        res.status(500).json({ error: 'Failed to create room' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to create room',
+            message: error.message
+        });
     }
 };
 
@@ -92,7 +142,15 @@ const createRoom = async (req, res) => {
 const updateRoom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { roomNumber, type, price, capacity, status, description, amenities } = req.body;
+        const {
+            roomNumber,
+            type,
+            price,
+            capacity,
+            description,
+            amenities,
+            status
+        } = req.body;
 
         // Check if room exists
         const existingRoom = await prisma.room.findUnique({
@@ -100,37 +158,59 @@ const updateRoom = async (req, res) => {
         });
 
         if (!existingRoom) {
-            return res.status(404).json({ error: 'Room not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'Room not found'
+            });
         }
 
-        // Check if new room number is already taken by another room
+        // If room number is being changed, check if new number exists
         if (roomNumber && roomNumber !== existingRoom.roomNumber) {
             const roomWithNumber = await prisma.room.findUnique({
                 where: { roomNumber }
             });
 
             if (roomWithNumber) {
-                return res.status(400).json({ error: 'Room with this number already exists' });
+                return res.status(400).json({
+                    success: false,
+                    error: 'Room number already exists'
+                });
             }
+        }
+
+        // Validate status
+        if (status && !['AVAILABLE', 'MAINTENANCE'].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid status. Status must be either AVAILABLE or MAINTENANCE'
+            });
         }
 
         const updatedRoom = await prisma.room.update({
             where: { id },
             data: {
-                roomNumber,
-                type,
-                price,
-                capacity,
-                status,
-                description,
-                amenities
+                roomNumber: roomNumber || undefined,
+                type: type ? type.toUpperCase() : undefined,
+                price: price ? parseFloat(price) : undefined,
+                capacity: capacity ? parseInt(capacity) : undefined,
+                description: description || undefined,
+                amenities: amenities || undefined,
+                status: status || undefined
             }
         });
 
-        res.status(200).json(updatedRoom);
+        res.status(200).json({
+            success: true,
+            message: 'Room updated successfully',
+            data: updatedRoom
+        });
     } catch (error) {
         console.error('Error updating room:', error);
-        res.status(500).json({ error: 'Failed to update room' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update room',
+            message: error.message
+        });
     }
 };
 
@@ -145,17 +225,39 @@ const deleteRoom = async (req, res) => {
         });
 
         if (!existingRoom) {
-            return res.status(404).json({ error: 'Room not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'Room not found'
+            });
+        }
+
+        // Check if room has any bookings
+        const bookings = await prisma.booking.findMany({
+            where: { roomId: id }
+        });
+
+        if (bookings.length > 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Cannot delete room with existing bookings'
+            });
         }
 
         await prisma.room.delete({
             where: { id }
         });
 
-        res.status(204).send();
+        res.status(200).json({
+            success: true,
+            message: 'Room deleted successfully'
+        });
     } catch (error) {
         console.error('Error deleting room:', error);
-        res.status(500).json({ error: 'Failed to delete room' });
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete room',
+            message: error.message
+        });
     }
 };
 

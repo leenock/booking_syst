@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, Calendar } from "lucide-react";
 import AddVisitorModal from "./components/AddVisitorModal";
 import EditVisitorModal from "./components/EditVisitorModal";
 import DeleteVisitorModal from "./components/DeleteVisitorModal";
+import ViewVisitorBookingsModal from "./components/ViewVisitorBookingsModal";
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
 
@@ -27,6 +28,7 @@ export default function VisitorsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isViewBookingsModalOpen, setIsViewBookingsModalOpen] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<VisitorAccount | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{
@@ -91,6 +93,11 @@ export default function VisitorsPage() {
   const handleDelete = (visitor: VisitorAccount) => {
     setSelectedVisitor(visitor);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleViewBookings = (visitor: VisitorAccount) => {
+    setSelectedVisitor(visitor);
+    setIsViewBookingsModalOpen(true);
   };
 
   const handleVisitorAdded = () => {
@@ -221,6 +228,13 @@ export default function VisitorsPage() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-4">
                       <button
+                        onClick={() => handleViewBookings(visitor)}
+                        className="text-purple-600 hover:text-purple-900 cursor-pointer flex items-center gap-1"
+                      >
+                        <Calendar className="h-4 w-4" />
+                        Bookings
+                      </button>
+                      <button
                         onClick={() => handleEdit(visitor)}
                         className="text-blue-600 hover:text-blue-900 cursor-pointer"
                       >
@@ -248,25 +262,26 @@ export default function VisitorsPage() {
         onVisitorAdded={handleVisitorAdded}
       />
 
-      {selectedVisitor && (
-        <>
-          <EditVisitorModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            visitor={selectedVisitor}
-            onVisitorUpdated={handleVisitorUpdated}
-          />
+      <EditVisitorModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        visitor={selectedVisitor}
+        onVisitorUpdated={handleVisitorUpdated}
+      />
 
-          <DeleteVisitorModal
-            isOpen={isDeleteModalOpen}
-            onClose={() => setIsDeleteModalOpen(false)}
-            visitor={selectedVisitor}
-            onVisitorDeleted={handleVisitorDeleted}
-          />
-        </>
-      )}
+      <DeleteVisitorModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        visitor={selectedVisitor}
+        onVisitorDeleted={handleVisitorDeleted}
+      />
 
-      {/* Toast */}
+      <ViewVisitorBookingsModal
+        isOpen={isViewBookingsModalOpen}
+        onClose={() => setIsViewBookingsModalOpen(false)}
+        visitorEmail={selectedVisitor?.email || ''}
+      />
+
       {toast && (
         <Toast
           message={toast.message}

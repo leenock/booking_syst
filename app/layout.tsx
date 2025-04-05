@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
 import ChatWindow from "./components/ui/chat/ChatWindow";
 
@@ -48,6 +49,7 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
 
           <ChatWindow />
+          <Toaster position="top-right" />
         </div>
       </body>
     </html>

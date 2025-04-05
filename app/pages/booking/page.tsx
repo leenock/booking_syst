@@ -20,31 +20,24 @@ function BookingPageContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    checkIn: searchParams.get("checkIn") || "",
-    checkOut: searchParams.get("checkOut") || "",
-    adults: searchParams.get("adults") || "1",
-    children: searchParams.get("children") || "0",
-    roomType: searchParams.get("roomType") || "",
-    fullName: "",
-    email: "",
-    phone: "",
-    specialRequests: "",
-    paymentMethod: "",
+    fullName: '',
+    email: '',
+    phone: '',
+    adults: 1,
+    kids: 0,
+    specialRequest: '',
+    roomType: '',
+    roomPrice: '',
+    roomId: '',
+    checkIn: '',
+    checkOut: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const roomTypes = [
-    { id: "standard", name: "Standard Room", price: 8000 },
-    { id: "deluxe", name: "Deluxe Room", price: 10000 },
-    { id: "suite", name: "Executive Suite", price: 12000 },
-   
-  ];
-
-  const paymentMethods = [
-    { id: "mpesa", name: "M-Pesa" },
-    { id: "card", name: "Credit/Debit Card" },
-    { id: "bank", name: "Bank Transfer" },
-    { id: "cash", name: "Cash on Arrival" },
+    { id: "standard", name: "Standard Room"},
+    { id: "deluxe", name: "Deluxe Room" },
+    { id: "suite", name: "Executive Suite" },
   ];
 
   useEffect(() => {
@@ -197,9 +190,9 @@ function BookingPageContent() {
                     <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
                     <input
                       type="number"
-                      name="children"
+                      name="kids"
                       min="0"
-                      value={formData.children}
+                      value={formData.kids}
                       onChange={handleInputChange}
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
                     />
@@ -224,7 +217,7 @@ function BookingPageContent() {
                     <option value="">Select a room type</option>
                     {roomTypes.map((room) => (
                       <option key={room.id} value={room.id}>
-                        {room.name} - ksh {room.price}/night
+                        {room.name} 
                       </option>
                     ))}
                   </select>
@@ -297,37 +290,13 @@ function BookingPageContent() {
                 <div className="relative">
                   <MessageSquare className="absolute left-3 top-3 h-5 w-5 text-purple-500" />
                   <textarea
-                    name="specialRequests"
-                    value={formData.specialRequests}
+                    name="specialRequest"
+                    value={formData.specialRequest}
                     onChange={handleInputChange}
                     rows={3}
                     className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
                     placeholder="Any special requests or requirements?"
                   />
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div className="group">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Payment Method
-                </label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
-                  <select
-                    name="paymentMethod"
-                    value={formData.paymentMethod}
-                    onChange={handleInputChange}
-                    required
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                  >
-                    <option value="">Select payment method</option>
-                    {paymentMethods.map((method) => (
-                      <option key={method.id} value={method.id}>
-                        {method.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 

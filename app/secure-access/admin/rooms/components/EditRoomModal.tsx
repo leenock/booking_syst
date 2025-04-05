@@ -11,7 +11,7 @@ interface Room {
   type: string;
   price: number;
   capacity: number;
-  status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
+  status: "AVAILABLE" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
@@ -22,7 +22,7 @@ interface RoomFormData {
   type: string;
   price: number;
   capacity: number;
-  status: "AVAILABLE" | "OCCUPIED" | "MAINTENANCE";
+  status: "AVAILABLE" | "MAINTENANCE";
   description: string;
   amenities: string[];
   images: string[];
@@ -323,7 +323,6 @@ export default function EditRoomModal({
                                transition-all duration-200 disabled:bg-gray-50 disabled:text-gray-500"
                     >
                       <option value="AVAILABLE">Available</option>
-                      <option value="BOOKED">Booked</option>
                       <option value="MAINTENANCE">Maintenance</option>
                     </select>
                   </div>

@@ -2,10 +2,16 @@
 CREATE TYPE "Role" AS ENUM ('SUPER_ADMIN', 'MODERATOR');
 
 -- CreateEnum
-CREATE TYPE "RoomType" AS ENUM ('SINGLE', 'DELUXE', 'SUITE');
+CREATE TYPE "RoomType" AS ENUM ('STANDARD', 'DELUXE', 'SUITE');
 
 -- CreateEnum
-CREATE TYPE "RoomStatus" AS ENUM ('AVAILABLE', 'BOOKED');
+CREATE TYPE "RoomStatus" AS ENUM ('AVAILABLE', 'BOOKED', 'MAINTENANCE');
+
+-- CreateEnum
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "Amenity" AS ENUM ('WIFI', 'TV', 'AC', 'MINI_BAR', 'JACUZZI');
 
 -- CreateTable
 CREATE TABLE "Admin" (
@@ -22,7 +28,6 @@ CREATE TABLE "Admin" (
 
 -- CreateTable
 CREATE TABLE "VisitorAccount" (
-    "id" SERIAL NOT NULL,
     "firstName" TEXT,
     "lastName" TEXT,
     "phone" TEXT,
@@ -30,6 +35,7 @@ CREATE TABLE "VisitorAccount" (
     "password" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "id" TEXT NOT NULL,
 
     CONSTRAINT "VisitorAccount_pkey" PRIMARY KEY ("id")
 );
@@ -39,9 +45,12 @@ CREATE TABLE "Room" (
     "id" TEXT NOT NULL,
     "roomNumber" TEXT NOT NULL,
     "type" "RoomType" NOT NULL,
-    "price" DOUBLE PRECISION NOT NULL,
-    "isAvailable" BOOLEAN NOT NULL DEFAULT true,
+    "price" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "amenities" "Amenity"[],
+    "capacity" INTEGER NOT NULL DEFAULT 1,
+    "description" TEXT,
+    "status" "RoomStatus" NOT NULL DEFAULT 'AVAILABLE',
 
     CONSTRAINT "Room_pkey" PRIMARY KEY ("id")
 );
@@ -55,14 +64,14 @@ CREATE TABLE "Booking" (
     "adults" INTEGER NOT NULL,
     "kids" INTEGER NOT NULL,
     "specialRequest" TEXT,
-    "paymentMethod" TEXT NOT NULL,
     "roomType" "RoomType" NOT NULL,
     "roomPrice" DOUBLE PRECISION NOT NULL,
-    "visitorAccountId" INTEGER,
     "roomId" TEXT NOT NULL,
     "checkIn" TIMESTAMP(3) NOT NULL,
     "checkOut" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "visitorAccountId" TEXT,
+    "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
 
     CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );

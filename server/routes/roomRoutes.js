@@ -5,17 +5,22 @@ const {
     getRoomById,
     createRoom,
     updateRoom,
-    deleteRoom,
-    getAvailableRooms
+    deleteRoom
 } = require('../controllers/roomController');
-const { validateRoomCreation } = require('../utils/validationMiddleware');
 
-// All routes are public - no authentication required
+// Get all rooms
 router.get('/', getAllRooms);
-router.get('/available', getAvailableRooms);
+
+// Get room by ID
 router.get('/:id', getRoomById);
-router.post('/', validateRoomCreation, createRoom);
-router.put('/:id', validateRoomCreation, updateRoom);
+
+// Create new room
+router.post('/', createRoom);
+
+// Update room
+router.put('/:id', updateRoom);
+
+// Delete room
 router.delete('/:id', deleteRoom);
 
 module.exports = router; 

@@ -10,7 +10,7 @@ const {
     isValidRoomNumber,
     isValidPrice,
     isValidGuestCount,
-    isValidPaymentMethod
+    isValidRoomType
 } = require('./validators');
 
 // User validation middleware
@@ -113,49 +113,80 @@ const validateRoomCreation = async (req, res, next) => {
 };
 
 // Booking validation middleware
-const validateBookingCreation = async (req, res, next) => {
+const validateBooking = (req, res, next) => {
+    const errors = [];
     const {
         fullName,
         email,
         phone,
         adults,
         kids,
-        paymentMethod,
+        specialRequest,
+        roomType,
+        roomPrice,
         roomId,
         checkIn,
         checkOut
     } = req.body;
-    const errors = [];
 
+    // Required fields validation
     if (!fullName?.trim()) errors.push('Full name is required');
     if (!email?.trim()) errors.push('Email is required');
-    if (!phone?.trim()) errors.push('Phone number is required');
-    if (adults === undefined) errors.push('Number of adults is required');
-    if (kids === undefined) errors.push('Number of kids is required');
-    if (!paymentMethod?.trim()) errors.push('Payment method is required');
+    if (!roomType?.trim()) errors.push('Room type is required');
+    if (!roomPrice) errors.push('Room price is required');
     if (!roomId?.trim()) errors.push('Room ID is required');
     if (!checkIn?.trim()) errors.push('Check-in date is required');
     if (!checkOut?.trim()) errors.push('Check-out date is required');
 
-    if (email && !isValidEmail(email)) errors.push('Invalid email format');
-    if (phone && !isValidPhone(phone)) errors.push('Invalid phone number format');
-    if (adults !== undefined && !isValidGuestCount(adults, kids)) {
-        errors.push('Invalid number of guests (maximum 4 guests per room)');
+    // Email format validation
+    if (email && !isValidEmail(email)) {
+        errors.push('Invalid email format');
     }
-    if (paymentMethod && !isValidPaymentMethod(paymentMethod)) {
-        errors.push('Invalid payment method');
+
+    // Phone format validation (if provided)
+    if (phone && !isValidPhone(phone)) {
+        errors.push('Invalid phone number format');
     }
-    if (checkIn && !isValidDate(checkIn)) errors.push('Invalid check-in date');
-    if (checkOut && !isValidDate(checkOut)) errors.push('Invalid check-out date');
-    if (checkIn && checkOut && !isValidDateRange(checkIn, checkOut)) {
-        errors.push('Check-out date must be after check-in date');
+
+    // Room type validation
+    if (roomType && !isValidRoomType(roomType)) {
+        errors.push('Invalid room type');
     }
-    if (checkIn && !isFutureDate(checkIn)) {
-        errors.push('Check-in date must be in the future');
+
+    // Date validation
+    if (checkIn && checkOut) {
+        const checkInDate = new Date(checkIn);
+        const checkOutDate = new Date(checkOut);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (checkInDate < today) {
+            errors.push('Check-in date cannot be in the past');
+        }
+
+        if (checkOutDate <= checkInDate) {
+            errors.push('Check-out date must be after check-in date');
+        }
+    }
+
+    // Number validation
+    if (adults && (!Number.isInteger(Number(adults)) || Number(adults) < 1)) {
+        errors.push('Adults must be a positive integer');
+    }
+
+    if (kids && (!Number.isInteger(Number(kids)) || Number(kids) < 0)) {
+        errors.push('Kids must be a non-negative integer');
+    }
+
+    if (roomPrice && (isNaN(Number(roomPrice)) || Number(roomPrice) <= 0)) {
+        errors.push('Room price must be a positive number');
     }
 
     if (errors.length > 0) {
-        return res.status(400).json({ errors });
+        return res.status(400).json({
+            success: false,
+            errors
+        });
     }
 
     next();
@@ -165,5 +196,5 @@ module.exports = {
     validateUserRegistration,
     validateUserUpdate,
     validateRoomCreation,
-    validateBookingCreation
+    validateBooking
 }; 

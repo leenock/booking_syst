@@ -18,7 +18,6 @@ model Admin {
 }
 
 model VisitorAccount {
-  id        String    @id @default(uuid())
   firstName String?
   lastName  String?
   phone     String?   @unique
@@ -26,19 +25,20 @@ model VisitorAccount {
   password  String?
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
+  id        String    @id @default(uuid())
   bookings  Booking[]
 }
 
 model Room {
-  id          String    @id @default(uuid())
-  roomNumber  String    @unique
+  id          String     @id @default(uuid())
+  roomNumber  String     @unique
   type        RoomType
-  price       Float     @default(0)
-  capacity    Int       @default(1)
-  status      RoomStatus @default(AVAILABLE)
-  description String?
+  price       Float      @default(0)
+  createdAt   DateTime   @default(now())
   amenities   Amenity[]
-  createdAt   DateTime  @default(now())
+  capacity    Int        @default(1)
+  description String?
+  status      RoomStatus @default(AVAILABLE)
   bookings    Booking[]
 }
 
@@ -50,14 +50,15 @@ model Booking {
   adults           Int
   kids             Int
   specialRequest   String?
-  paymentMethod    String
   roomType         RoomType
   roomPrice        Float
-  visitorAccountId String?
   roomId           String
   checkIn          DateTime
   checkOut         DateTime
+  paymentMethod    PaymentMethod   @default(CASH)  // Add a default value here
   createdAt        DateTime        @default(now())
+  visitorAccountId String?
+  status           BookingStatus   @default(PENDING)
   room             Room            @relation(fields: [roomId], references: [id])
   visitorAccount   VisitorAccount? @relation(fields: [visitorAccountId], references: [id])
 }
@@ -79,6 +80,14 @@ enum RoomStatus {
   MAINTENANCE
 }
 
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+}
+
 enum Amenity {
   WIFI
   TV
@@ -86,3 +95,9 @@ enum Amenity {
   MINI_BAR
   JACUZZI
 }
+enum PaymentMethod {
+  CASH
+  MPESA
+  BANK_TRANSFER
+}
+

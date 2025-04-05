@@ -21,7 +21,7 @@ app.use('/api/admin', adminRoutes);
 
 // Routes - no global authentication middleware
 app.use('/api/rooms', roomRoutes);
-app.use('/api/bookings', bookingRoutes);
+app.use('/api/booking', bookingRoutes);
 app.use('/api/visitor-accounts', visitorRoutes);
 
 // Error handling middleware
