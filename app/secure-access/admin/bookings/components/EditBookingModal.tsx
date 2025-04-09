@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 interface EditBookingModalProps {
   isOpen: boolean;
@@ -55,7 +56,7 @@ export default function EditBookingModal({
     checkIn: "",
     checkOut: "",
     status: "PENDING",
-    paymentMethod: "CASH"
+    paymentMethod: "CASH",
   });
 
   // Initialize form data when booking changes
@@ -70,10 +71,10 @@ export default function EditBookingModal({
         specialRequest: booking.specialRequest || "",
         roomType: booking.roomType as RoomType,
         roomPrice: booking.totalAmount,
-        checkIn: booking.checkIn.split('T')[0], // Format date for input
-        checkOut: booking.checkOut.split('T')[0], // Format date for input
+        checkIn: booking.checkIn.split("T")[0], // Format date for input
+        checkOut: booking.checkOut.split("T")[0], // Format date for input
         status: booking.status,
-        paymentMethod: booking.paymentMethod || "CASH"
+        paymentMethod: booking.paymentMethod || "CASH",
       });
     }
   }, [booking]);
@@ -184,59 +185,69 @@ export default function EditBookingModal({
         checkIn: formData.checkIn,
         checkOut: formData.checkOut,
         status: formData.status.toUpperCase(),
-        paymentMethod: formData.paymentMethod.toUpperCase()
+        paymentMethod: formData.paymentMethod.toUpperCase(),
       };
 
       // Send the update request
-      const response = await axios.put(
-        `http://localhost:5000/api/booking/${booking.id}`,
-        updateData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${AuthService.getToken()}`
+      try {
+        const response = await axios.put(
+          `http://localhost:5000/api/booking/${booking.id}`,
+          updateData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${AuthService.getToken()}`,
+            },
           }
+        );
+
+        // Check if the update was successful
+        if (response.data?.success) {
+          // Show success state
+          setIsSuccess(true);
+
+          // Notify parent component of successful update
+          onSuccess(booking.id, response.data.data);
+
+          // Close the modal after a short delay
+          setTimeout(() => {
+            handleClose();
+          }, 1000);
+        } else {
+          throw new Error(response.data?.error || "Failed to update booking");
         }
-      );
-
-      // Check if the update was successful
-      if (response.data?.success) {
-        // Show success state
-        setIsSuccess(true);
-
-        // Notify parent component of successful update
-        onSuccess(booking.id, response.data.data);
-
-        // Close the modal after a short delay
-        setTimeout(() => {
-          handleClose();
-        }, 1000);
-      } else {
-        throw new Error(response.data?.error || "Failed to update booking");
-      }
-    } catch (error: any) {
-      console.error("Error updating booking:", error);
-      
-      // Handle errors
-      let errorMessage = "Error updating booking. Please try again.";
-      
-      if (error.response) {
-        // Extract error details from the response
-        const errorData = error.response.data;
-        if (errorData.error) {
-          errorMessage = errorData.error;
-        } else if (errorData.message) {
-          errorMessage = errorData.message;
-        } else if (errorData.details) {
-          errorMessage = errorData.details;
+      } catch (error: any) {
+        // Suppress detailed logging in the console
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error updating booking:", error);
         }
-      } else if (error.request) {
-        errorMessage = "No response from server. Please check your connection.";
-      } else {
-        errorMessage = error.message || errorMessage;
+
+        // Handle errors
+        let errorMessage = "Error updating booking. Please try again.";
+
+        if (error.response) {
+          // Extract error details from the response
+          const errorData = error.response.data;
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.details) {
+            errorMessage = errorData.details;
+          }
+        } else if (error.request) {
+          errorMessage =
+            "No response from server. Please check your connection.";
+        } else {
+          errorMessage = error.message || errorMessage;
+        }
+
+        // Show error notification via toast
+        toast.error(errorMessage);
+        // Optionally, set a state variable to store the error message for display within the UI
+
+        setError(errorMessage);
       }
-      
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -268,7 +279,7 @@ export default function EditBookingModal({
                 {error}
               </div>
             )}
-            
+
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-6">
                 {/* Left Column */}
@@ -334,9 +345,13 @@ export default function EditBookingModal({
                                focus:outline-none focus:ring-2 focus:ring-blue-500/20 
                                transition-all duration-200"
                     >
-                      <option value="STANDARD">Standard Room - Ksh 8,000</option>
+                      <option value="STANDARD">
+                        Standard Room - Ksh 8,000
+                      </option>
                       <option value="DELUXE">Deluxe Room - Ksh 10,000</option>
-                      <option value="SUITE">Executive Suite - Ksh 12,000</option>
+                      <option value="SUITE">
+                        Executive Suite - Ksh 12,000
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -500,4 +515,4 @@ export default function EditBookingModal({
       </div>
     </>
   );
-} 
+}
