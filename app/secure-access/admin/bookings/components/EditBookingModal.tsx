@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -42,7 +42,7 @@ export default function EditBookingModal({
   booking,
 }: EditBookingModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -82,8 +82,8 @@ export default function EditBookingModal({
   // Reset state when modal is closed
   useEffect(() => {
     if (!isOpen) {
+      setShowSuccessToast(false);
       setError(null);
-      setIsSuccess(false);
     }
   }, [isOpen]);
 
@@ -115,7 +115,7 @@ export default function EditBookingModal({
 
   const handleClose = () => {
     setError(null);
-    setIsSuccess(false);
+    setShowSuccessToast(false);
     onClose();
   };
 
@@ -189,65 +189,48 @@ export default function EditBookingModal({
       };
 
       // Send the update request
-      try {
-        const response = await axios.put(
-          `http://localhost:5000/api/booking/${booking.id}`,
-          updateData,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${AuthService.getToken()}`,
-            },
-          }
-        );
-
-        // Check if the update was successful
-        if (response.data?.success) {
-          // Show success state
-          setIsSuccess(true);
-
-          // Notify parent component of successful update
-          onSuccess(booking.id, response.data.data);
-
-          // Close the modal after a short delay
-          setTimeout(() => {
-            handleClose();
-          }, 1000);
-        } else {
-          throw new Error(response.data?.error || "Failed to update booking");
+      const response = await axios.put(
+        `http://localhost:5000/api/booking/${booking.id}`,
+        updateData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${AuthService.getToken()}`,
+          },
         }
-      } catch (error: any) {
-        // Suppress detailed logging in the console
-        if (process.env.NODE_ENV === "development") {
-          console.error("Error updating booking:", error);
-        }
+      );
 
-        // Handle errors
-        let errorMessage = "Error updating booking. Please try again.";
+      // Check if the update was successful (assuming 2xx response means success)
+      if (response.status >= 200 && response.status < 300) {
+        setShowSuccessToast(true);
 
-        if (error.response) {
-          // Extract error details from the response
-          const errorData = error.response.data;
-          if (errorData.error) {
-            errorMessage = errorData.error;
-          } else if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.details) {
-            errorMessage = errorData.details;
-          }
-        } else if (error.request) {
-          errorMessage =
-            "No response from server. Please check your connection.";
-        } else {
-          errorMessage = error.message || errorMessage;
-        }
+        // Notify parent component
+        onSuccess(booking.id, response.data?.data);
 
-        // Show error notification via toast
-        toast.error(errorMessage);
-        // Optionally, set a state variable to store the error message for display within the UI
-
-        setError(errorMessage);
+        // Close the modal after short delay
+        setTimeout(() => {
+          onClose(); // use handleClose() if your component requires it
+        }, 1500);
+      } else {
+        throw new Error("Failed to update booking");
       }
+    } catch (err: any) {
+      let errorMessage = "Error updating booking";
+
+      if (err.response) {
+        errorMessage =
+          err.response.data?.error ||
+          err.response.data?.message ||
+          err.response.data?.details ||
+          `Server error: ${err.response.status}`;
+      } else if (err.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        errorMessage = `Request error: ${err.message}`;
+      }
+
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -398,6 +381,7 @@ export default function EditBookingModal({
                       type="number"
                       name="adults"
                       min="1"
+                      max="2"
                       value={formData.adults}
                       onChange={handleChange}
                       required
@@ -475,6 +459,7 @@ export default function EditBookingModal({
                            focus:outline-none focus:ring-2 focus:ring-blue-500/20 
                            transition-all duration-200"
                 >
+                  <option >Select payment method</option>
                   <option value="CASH">Cash</option>
                   <option value="MPESA">M-Pesa</option>
                   <option value="BANK_TRANSFER">Bank Transfer</option>
@@ -513,6 +498,13 @@ export default function EditBookingModal({
           </div>
         </div>
       </div>
+      {/* Success Toast Notification for Booking Edit */}
+      {showSuccessToast && (
+        <div className="fixed bottom-4 right-4 z-[100] bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center animate-fade-in-up">
+          <CheckCircle className="h-5 w-5 mr-2" />
+          <span>Booking updated successfully</span>
+        </div>
+      )}
     </>
   );
 }

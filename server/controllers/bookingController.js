@@ -270,7 +270,7 @@ const createBooking = async (req, res) => {
         success: false,
         error: "Maximum number of adults allowed is two",
       });
-    }       
+    }
 
     // Create booking data matching schema exactly
     const bookingData = {
@@ -361,18 +361,19 @@ const updateBooking = async (req, res) => {
       where: {
         AND: [
           {
-            // Ensure the current booking is excluded
             NOT: {
-              id: id, // Exclude the booking being updated by its ID
+              id: id, // Exclude current booking
             },
           },
           {
-            // Check for overlapping dates
+            roomType: roomType, // ✅ Only check overlap on the same room
+          },
+          {
             OR: [
               {
                 AND: [
-                  { checkIn: { lte: new Date(checkOut) } }, // Check if check-in date is before or on the updated check-out date
-                  { checkOut: { gte: new Date(checkIn) } }, // Check if check-out date is after or on the updated check-in date
+                  { checkIn: { lte: new Date(checkOut) } },
+                  { checkOut: { gte: new Date(checkIn) } },
                 ],
               },
             ],
@@ -380,6 +381,7 @@ const updateBooking = async (req, res) => {
         ],
       },
     });
+    
 
     if (existingBookings.length > 0) {
       console.log("Existing bookings found, please try again"); // comment before production
@@ -387,6 +389,15 @@ const updateBooking = async (req, res) => {
         success: false,
         error:
           "Booking dates overlap with existing bookings, kindly re-check the dates again",
+      });
+    }
+
+    // Check if the number of adults exceeds the allowed limit (2 adults per room)
+    if (adults > 2) {
+      console.log("Adults exceeds the allowed limit, please try again"); // comment before production
+      return res.status(400).json({
+        success: false,
+        error: "Maximum number of adults per room is 2",
       });
     }
 
