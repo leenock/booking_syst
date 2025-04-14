@@ -2,38 +2,57 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("adminToken")?.value;
-  const isAdminRoute = req.nextUrl.pathname.startsWith("/secure-access/admin");
-  const isLoginPage = req.nextUrl.pathname === "/secure-access/portal";
+  const adminToken = req.cookies.get("adminToken")?.value;
+  const visitorToken = req.cookies.get("visitorToken")?.value;
 
-  const token_user = req.cookies.get("visitorToken")?.value;
-  const isVisitorRoute = req.nextUrl.pathname.startsWith("/user_dashboard");
-  const isVisitorPage = req.nextUrl.pathname === "/pages/auth/login";
-  
+  const path = req.nextUrl.pathname;
 
-  // Redirect to login if trying to access admin routes without token
-  if (isAdminRoute && !token) {
+  const isAdminRoute = path.startsWith("/secure-access/admin");
+  const isAdminLoginPage = path === "/secure-access/portal";
+
+  const isVisitorDashboard = path.startsWith("/user_dashboard");
+  const isVisitorLoginPage = path === "/pages/auth/login";
+
+  const isProtectedVisitorPage = [
+    "/pages/user_bookings",
+    "/pages/analytics",
+    "/pages/notifications",
+    "/pages/settings",
+  ].some((route) => path.startsWith(route));
+
+  // Redirect to admin login if trying to access admin route without admin token
+  if (isAdminRoute && !adminToken) {
     return NextResponse.redirect(new URL("/secure-access/portal", req.url));
   }
 
-  // Redirect to login if trying to access visitor routes without token
-  if (isVisitorRoute && !token_user) {
+  // Redirect to visitor login if trying to access protected visitor areas without visitor token
+  if ((isVisitorDashboard || isProtectedVisitorPage) && !visitorToken) {
     return NextResponse.redirect(new URL("/pages/auth/login", req.url));
   }
 
-  // Redirect to admin dashboard if trying to access login page while already logged in
-  if (isLoginPage && token) {
+  // Prevent access to admin login if already logged in as admin
+  if (isAdminLoginPage && adminToken) {
     return NextResponse.redirect(new URL("/secure-access/admin", req.url));
   }
 
-  // Redirect to visitor dashboard if trying to access login page while already logged in
-  if (isVisitorPage && token_user) {
+  // Prevent access to visitor login if already logged in
+  if (isVisitorLoginPage && visitorToken) {
     return NextResponse.redirect(new URL("/user_dashboard", req.url));
   }
 
   return NextResponse.next();
 }
 
+// Define all protected paths
 export const config = {
-  matcher: ["/secure-access/admin/:path*", "/secure-access/portal", "/user_dashboard/:path*", "/pages/auth/login", "/pages/user_bookings", "/pages/analytics", "/pages/notifications", "/pages/settings"],
+  matcher: [
+    "/secure-access/admin/:path*",
+    "/secure-access/portal",
+    "/user_dashboard/:path*",
+    "/pages/user_bookings",
+    "/pages/analytics",
+    "/pages/notifications",
+    "/pages/settings",
+    "/pages/auth/login",
+  ],
 };
