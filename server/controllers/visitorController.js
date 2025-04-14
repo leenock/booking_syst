@@ -1,7 +1,8 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid");
+const jwt = require("jsonwebtoken");
 
 // Get all visitors
 const getAllVisitors = async (req, res) => {
@@ -15,7 +16,7 @@ const getAllVisitors = async (req, res) => {
         phone: true,
         isActive: true,
         createdAt: true,
-      }
+      },
     });
     res.json(visitors);
   } catch (error) {
@@ -36,7 +37,7 @@ const getVisitorById = async (req, res) => {
         phone: true,
         isActive: true,
         createdAt: true,
-      }
+      },
     });
     if (!visitor) {
       return res.status(404).json({ error: "Visitor not found" });
@@ -92,8 +93,8 @@ const createVisitor = async (req, res) => {
     // Check if visitor already exists
     const existingVisitor = await prisma.visitorAccount.findFirst({
       where: {
-        OR: [{ email }, { phone }]
-      }
+        OR: [{ email }, { phone }],
+      },
     });
 
     if (existingVisitor) {
@@ -123,12 +124,12 @@ const createVisitor = async (req, res) => {
         phone: true,
         isActive: true,
         createdAt: true,
-      }
+      },
     });
 
     res.status(201).json(visitor);
   } catch (error) {
-    console.error('Create error:', error);
+    console.error("Create error:", error);
     res.status(500).json({ error: "Failed to create visitor" });
   }
 };
@@ -141,7 +142,7 @@ const updateVisitor = async (req, res) => {
 
     // Check if visitor exists
     const existingVisitor = await prisma.visitorAccount.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingVisitor) {
@@ -169,16 +170,20 @@ const updateVisitor = async (req, res) => {
     }
 
     // Check if email or phone is being changed and if it already exists ~ prevents duplicate emails or phone numbers by users.
-    if ((email && email !== existingVisitor.email) || (phone && phone !== existingVisitor.phone)) {
-      const existingVisitorWithSameContact = await prisma.visitorAccount.findFirst({
-        where: {
-          id: { not: id },
-          OR: [
-            { email: email || existingVisitor.email },
-            { phone: phone || existingVisitor.phone }
-          ]
-        }
-      });
+    if (
+      (email && email !== existingVisitor.email) ||
+      (phone && phone !== existingVisitor.phone)
+    ) {
+      const existingVisitorWithSameContact =
+        await prisma.visitorAccount.findFirst({
+          where: {
+            id: { not: id },
+            OR: [
+              { email: email || existingVisitor.email },
+              { phone: phone || existingVisitor.phone },
+            ],
+          },
+        });
 
       if (existingVisitorWithSameContact) {
         return res.status(400).json({
@@ -197,7 +202,6 @@ const updateVisitor = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-
     // Update visitor
     const updatedVisitor = await prisma.visitorAccount.update({
       where: { id },
@@ -210,12 +214,12 @@ const updateVisitor = async (req, res) => {
         phone: true,
         isActive: true,
         createdAt: true,
-      }
+      },
     });
 
     res.json(updatedVisitor);
   } catch (error) {
-    console.error('Update error:', error);
+    console.error("Update error:", error);
     res.status(500).json({ error: "Failed to update visitor" });
   }
 };
@@ -224,7 +228,7 @@ const updateVisitor = async (req, res) => {
 const deleteVisitor = async (req, res) => {
   try {
     const visitor = await prisma.visitorAccount.delete({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
     });
     if (!visitor) {
       return res.status(404).json({ error: "Visitor not found" });
@@ -235,10 +239,79 @@ const deleteVisitor = async (req, res) => {
   }
 };
 
+// user login
+const loginVisitor = async (req, res) => {
+  try {
+    let { email, password } = req.body;
+
+    // Basic validation
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    email = email.trim().toLowerCase(); // normalize email
+
+    // Find visitor by email
+    const visitor = await prisma.visitorAccount.findUnique({
+      where: { email },
+    });
+
+    if (!visitor) {
+      return res.status(404).json({ error: "Visitor not found" });
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, visitor.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      {
+        id: visitor.id,
+        email: visitor.email,
+        isActive: visitor.isActive,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Return visitor info and token
+    res.status(200).json({
+      token,
+      visitor: {
+        id: visitor.id,
+        firstName: visitor.firstName,
+        lastName: visitor.lastName,
+        email: visitor.email,
+        phone: visitor.phone,
+        isActive: visitor.isActive,
+        createdAt: visitor.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Failed to login visitor" });
+  }
+};
+
+// user logout
+const logoutVisitor = async (req, res) => {
+  try {
+    res.json({ message: "Visitor logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to logout visitor" });
+  }
+};
+
 module.exports = {
   getAllVisitors,
   getVisitorById,
   createVisitor,
   updateVisitor,
   deleteVisitor,
-}; 
+  loginVisitor,
+  logoutVisitor,
+  // Add any other visitor-related functions here
+};

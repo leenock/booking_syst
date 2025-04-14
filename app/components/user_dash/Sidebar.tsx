@@ -11,12 +11,12 @@ import {
   LogOut,
   Menu,
   X,
-  BarChart2,
   LucideIcon,
 } from "lucide-react";
+import UserAuthService, { UserData } from "@/app/services/user_auth";
 
 // Types
-interface SidebarProps {
+interface VisitorSidebarProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 }
@@ -27,19 +27,18 @@ interface MenuItem {
   href: string;
 }
 
-// Constants
+// Menu Items
 const MENU_ITEMS: MenuItem[] = [
-  { name: "Dashboard", icon: Home, href: "/user_dashboard" },
+  { name: "Home", icon: Home, href: "/user_dashboard" },
   { name: "My Bookings", icon: Calendar, href: "/pages/user_bookings" },
+  { name: "Reports", icon: Calendar, href: "/pages/analytics" },
   { name: "Notifications", icon: Bell, href: "/pages/notifications" },
-  { name: "Analytics", icon: BarChart2, href: "/pages/analytics" },
   { name: "Settings", icon: Settings, href: "/pages/settings" },
 ];
 
 const RESIZE_DEBOUNCE_MS = 100;
 const DESKTOP_BREAKPOINT = 768;
 
-// Utility functions
 function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
   let timer: NodeJS.Timeout;
   return function (this: any, ...args: Parameters<T>) {
@@ -48,7 +47,6 @@ function debounce<T extends (...args: any[]) => any>(fn: T, ms: number) {
   };
 }
 
-// Add loading skeleton component
 const MenuItemSkeleton = () => (
   <div className="px-4 py-3 rounded-lg animate-pulse">
     <div className="flex items-center space-x-3">
@@ -70,27 +68,15 @@ const ProfileSkeleton = () => (
   </div>
 );
 
-// Add analytics tracking
-const trackNavigation = (pageName: string) => {
-  // Example analytics call
-  if (typeof window !== 'undefined') {
-    try {
-      // Replace with your analytics provider
-      console.log(`Navigation tracked: ${pageName}`);
-      // window.analytics?.track('Navigation', { page: pageName });
-    } catch (error) {
-      console.error('Analytics error:', error);
-    }
-  }
-};
-
-export default function Sidebar({ isOpen, onOpenChange }: SidebarProps) {
+export default function VisitorSidebar({ isOpen, onOpenChange }: VisitorSidebarProps) {
   const pathname = usePathname();
+  const [userData, setUserData] = useState<UserData | null>(null);
 
-  // Handlers
-  const handleClose = useCallback(() => {
-    onOpenChange(false);
-  }, [onOpenChange]);
+  const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
+
+  const handleLogout = async () => {
+    await UserAuthService.logout();
+  };
 
   const handleResize = useCallback(() => {
     if (window.innerWidth >= DESKTOP_BREAKPOINT) {
@@ -100,58 +86,58 @@ export default function Sidebar({ isOpen, onOpenChange }: SidebarProps) {
 
   const isActive = useCallback((path: string) => pathname === path, [pathname]);
 
-  // Effects
+  useEffect(() => {
+    const data = UserAuthService.getUserData();
+    if (data) setUserData(data);
+  }, []);
+
   useEffect(() => {
     handleClose();
   }, [pathname, handleClose]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    // Initial check
-    handleResize();
-
     const debouncedResize = debounce(handleResize, RESIZE_DEBOUNCE_MS);
+    handleResize();
     window.addEventListener("resize", debouncedResize);
-
-    return () => {
-      window.removeEventListener("resize", debouncedResize);
-    };
+    return () => window.removeEventListener("resize", debouncedResize);
   }, [handleResize]);
 
-  // Render helpers
-  const renderProfileSection = () => (
-    <div className="p-6">
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-200 to-pink-200 flex items-center justify-center">
-            <span className="text-lg font-semibold text-purple-600">JD</span>
+  const renderProfileSection = () => {
+    if (!userData) return <ProfileSkeleton />;
+
+    return (
+      <div className="p-6">
+        <div className="flex items-center space-x-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-200 to-teal-200 flex items-center justify-center">
+              <span className="text-lg font-semibold text-teal-700">
+                {userData.firstName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
           </div>
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-white rounded-full" />
-        </div>
-        <div>
-          <h2 className="text-sm font-semibold text-gray-800">John Doe</h2>
-          <p className="text-xs text-gray-500">john@example.com</p>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-800">{userData.firstName}</h2>
+            <p className="text-xs text-gray-500">{userData.email}</p>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderNavigation = () => (
     <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
-      <Suspense fallback={[...Array(5)].map((_, i) => <MenuItemSkeleton key={i} />)}>
+      <Suspense fallback={[...Array(4)].map((_, i) => <MenuItemSkeleton key={i} />)}>
         {MENU_ITEMS.map((item) => (
           <Link
             key={item.name}
             href={item.href}
-            onClick={() => trackNavigation(item.name)}
-            className={`
-              flex items-center px-4 py-3 rounded-lg transition-all duration-200
-              ${isActive(item.href)
-                ? "bg-purple-50 text-purple-600"
+            className={`flex items-center px-4 py-3 rounded-lg transition-all duration-200 ${
+              isActive(item.href)
+                ? "bg-teal-50 text-teal-700"
                 : "text-gray-600 hover:bg-gray-50"
-              }
-            `}
+            }`}
           >
             <item.icon className="w-5 h-5 mr-3" />
             <span>{item.name}</span>
@@ -162,14 +148,14 @@ export default function Sidebar({ isOpen, onOpenChange }: SidebarProps) {
   );
 
   const renderLogoutButton = () => (
-    <div className="p-4 mt-auto border-t border-gray-100 bg-gradient-to-r from-purple-50/50 to-pink-50/50">
+    <div className="p-4 mt-auto border-t border-gray-100 bg-gradient-to-r from-teal-50/50 to-green-50/50">
       <button
-        onClick={handleClose}
+        onClick={handleLogout}
         className="flex items-center w-full px-4 py-3 text-gray-600 rounded-xl hover:bg-white/80 hover:shadow-sm transition-all duration-200 group"
       >
-        <LogOut className="w-5 h-5 mr-3 text-purple-500 group-hover:text-pink-500 transition-colors duration-200" />
+        <LogOut className="w-5 h-5 mr-3 text-teal-600 group-hover:text-green-600 transition-colors duration-200" />
         <span className="font-medium group-hover:text-gray-800 transition-colors duration-200">
-          Logout
+          Log out
         </span>
       </button>
     </div>
@@ -177,45 +163,38 @@ export default function Sidebar({ isOpen, onOpenChange }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Menu Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-blue-600/10 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300 ease-in-out"
+          className="fixed inset-0 bg-black/10 backdrop-blur-sm z-30 md:hidden"
           onClick={handleClose}
         />
       )}
 
-      {/* Mobile Menu Button */}
       <button
         onClick={() => onOpenChange(!isOpen)}
         className="fixed top-3 left-3 z-50 p-2.5 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-100/50 shadow-sm hover:bg-white hover:shadow-md active:scale-95 transition-all duration-200 md:hidden"
         aria-label="Toggle menu"
       >
         {isOpen ? (
-          <X size={20} className="text-purple-600 transition-transform duration-200 rotate-90" />
+          <X size={20} className="text-teal-600 rotate-90 transition-transform duration-200" />
         ) : (
-          <Menu size={20} className="text-purple-600 transition-transform duration-200" />
+          <Menu size={20} className="text-teal-600 transition-transform duration-200" />
         )}
       </button>
 
-      {/* Sidebar */}
       <aside
-        className={`
-          fixed top-0 left-0 h-full bg-white/95 backdrop-blur-sm shadow-xl z-40 
-          transition-all duration-300 ease-in-out transform
-          ${isOpen ? 'w-72 translate-x-0' : 'w-72 -translate-x-full md:translate-x-0 md:w-64'}
-        `}
+        className={`fixed top-0 left-0 h-full bg-white/95 backdrop-blur-sm shadow-xl z-40 transition-all duration-300 ease-in-out transform ${
+          isOpen ? "w-72 translate-x-0" : "w-72 -translate-x-full md:translate-x-0 md:w-64"
+        }`}
         role="navigation"
-        aria-label="Main navigation"
+        aria-label="Visitor navigation"
       >
         <div className="flex flex-col h-full">
-          {/* Logo - Hidden on mobile */}
           <div className="p-6 border-b border-gray-100 md:block hidden">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-              Vicarage Resort
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 text-transparent bg-clip-text">
+              Visitor Panel
             </h1>
           </div>
-
           {renderProfileSection()}
           {renderNavigation()}
           {renderLogoutButton()}

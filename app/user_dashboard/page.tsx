@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/app/components/user_dash/Sidebar";
 import DashboardOverview from "@/app/components/user_dash/DashboardOverview";
 import NotificationsList from "@/app/components/user_dash/NotificationsList";
 import UserSettings from "@/app/components/user_dash/UserSettings";
 import { CalendarDays, CreditCard, Hotel, Users } from "lucide-react";
+import UserAuthService from "@/app/services/user_auth";
+// Import your UserAuthService to fetch user data
 
 export default function DashboardPage() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null); // To store full name
 
   // Mock data for statistics
   const stats = [
@@ -44,6 +47,14 @@ export default function DashboardPage() {
     },
   ];
 
+  useEffect(() => {
+    // Fetch the user data from UserAuthService
+    const userData = UserAuthService.getUserData();
+    if (userData) {
+      setUserName(`${userData.firstName} ${userData.lastName}`); // Concatenate first and last name
+    }
+  }, []);
+
   const renderContent = () => {
     switch (pathname) {
       case "/dashboard/notifications":
@@ -60,15 +71,11 @@ export default function DashboardPage() {
       <Sidebar isOpen={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen} />
 
       <div
-        className={`
-        flex-1 transition-all duration-300 ease-in-out
-        md:ml-64 relative w-full
-        ${
+        className={`flex-1 transition-all duration-300 ease-in-out md:ml-64 relative w-full ${
           isMobileMenuOpen
             ? "opacity-50 blur-sm pointer-events-none scale-98"
             : "scale-100"
-        }
-      `}
+        }`}
       >
         {/* Sticky Mobile Header */}
         <header className="sticky top-0 z-40 md:hidden">
@@ -87,11 +94,13 @@ export default function DashboardPage() {
             <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl md:rounded-2xl p-4 md:p-6 text-white shadow-lg">
               <div className="flex items-center space-x-3 md:space-x-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <span className="text-base md:text-lg font-semibold">JD</span>
+                  <span className="text-base md:text-lg font-semibold">
+                    {userName ? userName.charAt(0) : "U"} {/* Use first letter of full name */}
+                  </span>
                 </div>
                 <div>
                   <h2 className="text-xl md:text-2xl font-bold">
-                    Welcome back, Johns
+                    Welcome back, {userName ? userName : "User"}
                   </h2>
                   <p className="text-sm md:text-base text-white/80">
                     Here's what's happening with your bookings

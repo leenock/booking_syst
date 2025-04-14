@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
 };
 module.exports = {
   compiler: {
-    removeConsole: true,
+    removeConsole: false,
   },
 }
 export default nextConfig;
