@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import UserSettings from '@/app/components/user_dash/UserSettings';
 import Sidebar from '@/app/components/user_dash/Sidebar';
-import { Settings } from 'lucide-react';
+import { BarChart2 } from 'lucide-react';
 import { useState } from 'react';
 
-export default function SettingsPage() {
+export default function UserAnalytics() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
@@ -15,23 +14,23 @@ export default function SettingsPage() {
 
       {/* Main Content */}
       <div className="md:pl-64 min-h-screen transition-all duration-200">
-        {/* Page Header */}
+        {/* Header */}
         <header className="bg-white border-b border-gray-100 sticky top-0 z-10">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-4 flex items-center justify-center md:justify-start gap-3">
-              <Settings className="w-6 h-6 text-purple-600" />
-              <h1 className="text-xl font-semibold text-gray-900">Account Setting</h1>
+              <BarChart2 className="w-6 h-6 text-purple-600" />
+              <h1 className="text-xl font-semibold text-gray-900">Analytics</h1>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Content */}
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md">
-            <UserSettings />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 transition-shadow hover:shadow-md p-6">
+            <p className="text-gray-700 text-center text-lg">Reports appear here</p>
           </div>
         </main>
       </div>
     </div>
   );
-} 
+}

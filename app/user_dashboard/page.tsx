@@ -75,7 +75,7 @@ export default function DashboardPage() {
           <div className="bg-white/70 backdrop-blur-md border-b border-gray-100/50 shadow-sm">
             <div className="flex items-center justify-center h-16 px-4 bg-gradient-to-r from-purple-50/30 to-pink-50/30">
               <h1 className="text-xl font-bold text-center bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                Vicarage Resort
+                Vicarage Resorts
               </h1>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-xl md:text-2xl font-bold">
-                    Welcome back, John
+                    Welcome back, Johns
                   </h2>
                   <p className="text-sm md:text-base text-white/80">
                     Here's what's happening with your bookings

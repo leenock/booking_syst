@@ -29,10 +29,10 @@ interface MenuItem {
 
 // Constants
 const MENU_ITEMS: MenuItem[] = [
-  { name: "Dashboard", icon: Home, href: "/dashboard" },
-  { name: "My Bookings", icon: Calendar, href: "/dashboard/" },
-  { name: "Notifications", icon: Bell, href: "/dashboard/" },
-  { name: "Analytics", icon: BarChart2, href: "/dashboard/" },
+  { name: "Dashboard", icon: Home, href: "/user_dashboard" },
+  { name: "My Bookings", icon: Calendar, href: "/pages/user_bookings" },
+  { name: "Notifications", icon: Bell, href: "/pages/notifications" },
+  { name: "Analytics", icon: BarChart2, href: "/pages/analytics" },
   { name: "Settings", icon: Settings, href: "/pages/settings" },
 ];
 
