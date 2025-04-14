@@ -27,6 +27,7 @@ type ReportType = {
 export default function ReportsExportDashboard() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
   
   const reportTypes: ReportType[] = [
     {
@@ -129,6 +130,21 @@ export default function ReportsExportDashboard() {
     alert(`Preparing ${format} export for ${reportTypes.find(r => r.id === reportId)?.name}. The download will begin shortly.`);
   };
 
+  // Handle clicks outside dropdowns
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-dropdown="category"]')) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
@@ -160,54 +176,55 @@ export default function ReportsExportDashboard() {
         </div>
         
         <div className="flex gap-2">
-          <div className="relative inline-block text-left">
+          <div className="relative inline-block text-left" data-dropdown="category">
             <div>
               <button 
                 type="button" 
                 className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
                 id="category-menu"
-                aria-expanded="true"
+                aria-expanded={categoryDropdownOpen}
                 aria-haspopup="true"
-                onClick={() => document.getElementById('dropdown-menu')?.classList.toggle('hidden')}
+                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
               >
                 {selectedCategory || 'All Categories'}
                 <ChevronDown className="ml-2 h-5 w-5" />
               </button>
             </div>
 
-            <div 
-              className="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" 
-              role="menu" 
-              aria-orientation="vertical" 
-              aria-labelledby="category-menu" 
-              id="dropdown-menu"
-            >
-              <div className="py-1" role="none">
-                <button
-                  className={`block w-full text-left px-4 py-2 text-sm ${!selectedCategory ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
-                  role="menuitem"
-                  onClick={() => {
-                    setSelectedCategory(null);
-                    document.getElementById('dropdown-menu')?.classList.add('hidden');
-                  }}
-                >
-                  All Categories
-                </button>
-                {categories.map(category => (
+            {categoryDropdownOpen && (
+              <div 
+                className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50" 
+                role="menu" 
+                aria-orientation="vertical" 
+                aria-labelledby="category-menu"
+              >
+                <div className="py-1" role="none">
                   <button
-                    key={category}
-                    className={`block w-full text-left px-4 py-2 text-sm ${selectedCategory === category ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
+                    className={`block w-full text-left px-4 py-2 text-sm ${!selectedCategory ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
                     role="menuitem"
                     onClick={() => {
-                      setSelectedCategory(category);
-                      document.getElementById('dropdown-menu')?.classList.add('hidden');
+                      setSelectedCategory(null);
+                      setCategoryDropdownOpen(false);
                     }}
                   >
-                    {category}
+                    All Categories
                   </button>
-                ))}
+                  {categories.map(category => (
+                    <button
+                      key={category}
+                      className={`block w-full text-left px-4 py-2 text-sm ${selectedCategory === category ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
+                      role="menuitem"
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setCategoryDropdownOpen(false);
+                      }}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {selectedCategory && (
@@ -238,61 +255,30 @@ export default function ReportsExportDashboard() {
               
               <p className="text-sm text-gray-600 mb-4">{report.description}</p>
               
-              <div className="flex items-center justify-between">
-                <div className="text-xs text-gray-500 flex items-center">
+              <div className="mt-2">
+                <div className="text-xs text-gray-500 flex items-center mb-3">
                   <FileText size={14} className="mr-1" />
-                  Available formats: {report.availableFormats.join(", ")}
+                  Available formats:
                 </div>
                 
-                <div className="relative inline-block text-left">
-                  <div>
-                    <button 
-                      type="button" 
-                      className="inline-flex items-center justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
-                      id={`export-menu-${report.id}`}
-                      aria-expanded="true"
-                      aria-haspopup="true"
-                      onClick={() => document.getElementById(`dropdown-formats-${report.id}`)?.classList.toggle('hidden')}
+                <div className="flex flex-wrap gap-2">
+                  {report.availableFormats.map(format => (
+                    <button
+                      key={format}
+                      className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-medium flex items-center"
+                      onClick={() => handleExport(report.id, format)}
                     >
-                      <Download size={14} className="mr-1" />
-                      Export
+                      <Download size={12} className="mr-1" />
+                      {format}
                     </button>
-                  </div>
-
-                  <div 
-                    className="hidden origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10" 
-                    role="menu" 
-                    aria-orientation="vertical" 
-                    aria-labelledby={`export-menu-${report.id}`} 
-                    id={`dropdown-formats-${report.id}`}
+                  ))}
+                  <button
+                    className="px-3 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-medium flex items-center"
+                    onClick={() => alert(`Preview of ${report.name} would open here`)}
                   >
-                    <div className="py-1" role="none">
-                      {report.availableFormats.map(format => (
-                        <button
-                          key={format}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          role="menuitem"
-                          onClick={() => {
-                            handleExport(report.id, format);
-                            document.getElementById(`dropdown-formats-${report.id}`)?.classList.add('hidden');
-                          }}
-                        >
-                          Export as {format}
-                        </button>
-                      ))}
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 border-t border-gray-100"
-                        role="menuitem"
-                        onClick={() => {
-                          document.getElementById(`dropdown-formats-${report.id}`)?.classList.add('hidden');
-                          // In a real app, this would open a preview modal or page
-                          alert(`Preview of ${report.name} would open here`);
-                        }}
-                      >
-                        <Eye size={14} className="inline mr-1" /> Preview
-                      </button>
-                    </div>
-                  </div>
+                    <Eye size={12} className="mr-1" />
+                    Preview
+                  </button>
                 </div>
               </div>
             </div>
