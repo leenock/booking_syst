@@ -13,6 +13,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/react-datepicker": "^6.2.0",
+    "axios": "^1.8.4",
     "bcryptjs": "^3.0.2",
     "chart.js": "^4.4.8",
     "connect-redis": "^8.0.2",
