@@ -8,6 +8,8 @@ import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import UserAuthService from "@/app/services/user_auth";
 
+type SocialProvider = 'Google' | 'Facebook';
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -68,6 +70,22 @@ export default function LoginPage() {
     }
   };
 
+  const handleSocialLogin = (provider: SocialProvider): void => {
+    setIsLoading(true);
+    setErrorMessage("");
+    
+    // In a real implementation, you would redirect to the OAuth provider
+    // or use a library like next-auth to handle the authentication flow
+    console.log(`Logging in with ${provider}`);
+    
+    // This is just a placeholder - replace with actual OAuth implementation
+    setTimeout(() => {
+      setIsLoading(false);
+      // For demonstration purposes only
+      alert(`${provider} login functionality would happen here`);
+    }, 1000);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100">
       <Navbar />
@@ -95,7 +113,6 @@ export default function LoginPage() {
                 your exclusive member benefits.
               </p>
               <div className="space-y-3 md:space-y-4 animate-fade-in delay-300">
-                {/* Icons */}
                 <div className="flex items-center">
                   <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center mr-3 md:mr-4">
                     <svg
@@ -103,12 +120,44 @@ export default function LoginPage() {
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path d="..." />
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                     </svg>
                   </div>
-                  <p>Exclusive member rates</p>
+                  <p>Check your email</p>
                 </div>
-                {/* Add more icons here if needed */}
+                <div className="flex items-center">
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center mr-3 md:mr-4">
+                    <svg
+                      className="w-4 h-4 md:w-6 md:h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <p>Follow the instructions</p>
+                </div>
+                <div className="flex items-center">
+                  <div className="w-8 h-8 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center mr-3 md:mr-4">
+                    <svg
+                      className="w-4 h-4 md:w-6 md:h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <p>Create new password</p>
+                </div>
               </div>
             </div>
           </div>
@@ -118,6 +167,46 @@ export default function LoginPage() {
             <div className="text-center mb-6">
               <h3 className="text-3xl font-bold text-gray-800 mb-1">Sign In</h3>
               <p className="text-gray-600">Access your account</p>
+            </div>
+
+            {/* Social Login Buttons */}
+            <div className="flex flex-col space-y-4 mb-6">
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('Google')}
+                className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-300"
+              >
+                <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
+                    <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z" />
+                    <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z" />
+                    <path fill="#FBBC05" d="M -21.484 53.529 C -21.734 52.809 -21.864 52.039 -21.864 51.239 C -21.864 50.439 -21.724 49.669 -21.484 48.949 L -21.484 45.859 L -25.464 45.859 C -26.284 47.479 -26.754 49.299 -26.754 51.239 C -26.754 53.179 -26.284 54.999 -25.464 56.619 L -21.484 53.529 Z" />
+                    <path fill="#EA4335" d="M -14.754 43.989 C -12.984 43.989 -11.404 44.599 -10.154 45.789 L -6.734 42.369 C -8.804 40.429 -11.514 39.239 -14.754 39.239 C -19.444 39.239 -23.494 41.939 -25.464 45.859 L -21.484 48.949 C -20.534 46.099 -17.884 43.989 -14.754 43.989 Z" />
+                  </g>
+                </svg>
+                Continue with Google
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => handleSocialLogin('Facebook')}
+                className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300"
+              >
+                <svg className="h-5 w-5 mr-2" fill="white" viewBox="0 0 24 24">
+                  <path d="M22.675 0H1.325C0.593 0 0 0.593 0 1.325v21.351C0 23.407 0.593 24 1.325 24H12.82v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463 0.099 2.795 0.143v3.24l-1.918 0.001c-1.504 0-1.795 0.715-1.795 1.763v2.313h3.587l-0.467 3.622h-3.12V24h6.116c0.73 0 1.323-0.593 1.323-1.325V1.325C24 0.593 23.407 0 22.675 0z" />
+                </svg>
+                Continue with Facebook
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">Or continue with email</span>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -178,9 +267,6 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-center justify-between">
-                <label className="flex items-center text-sm text-gray-700">
-                  <input type="checkbox" className="mr-2" /> Remember me
-                </label>
                 <Link
                   href="/pages/auth/forgot-password"
                   className="text-amber-600 hover:text-amber-500 text-sm"
