@@ -134,7 +134,94 @@ const createVisitor = async (req, res) => {
   }
 };
 
-// Update visitor
+// update frontend visitor 
+
+const updateVisitorFrontend = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, phone, password } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !phone || !password) {
+      return res.status(400).json({
+        error: "Missing required fields",
+        details: {
+          firstName: !firstName ? "First name is required" : null,
+          lastName: !lastName ? "Last name is required" : null,
+        //  email: !email ? "Email is required" : null,
+          phone: !phone ? "Phone is required" : null,
+          password: !password ? "Password is required" : null,
+        },
+      });
+    }
+
+    // Validate email format
+   /*  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        error: "Invalid email format",
+      });
+    } */
+
+    // Validate password length
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters long",
+      });
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        error: "Invalid phone number format",
+      });
+    }
+
+    // Check if visitor exists
+    const existingVisitor = await prisma.visitorAccount.findUnique({
+      where: { id },
+    });
+
+    if (!existingVisitor) {
+      return res.status(404).json({ error: "Visitor not found" });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Update visitor
+    const updatedVisitor = await prisma.visitorAccount.update({
+      where: { id },
+      data: {
+        firstName,
+        lastName,
+        //email,
+        phone,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        //email: true,
+        phone: true,
+        password:true,
+        isActive: true,
+        updatedAt: true,
+      },
+    });
+
+    res.status(200).json(updatedVisitor);
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(500).json({ error: "Failed to update visitor" });
+  }
+};
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Update visitor from admin side
 const updateVisitor = async (req, res) => {
   try {
     const { id } = req.params;
@@ -309,6 +396,7 @@ module.exports = {
   getAllVisitors,
   getVisitorById,
   createVisitor,
+  updateVisitorFrontend,
   updateVisitor,
   deleteVisitor,
   loginVisitor,

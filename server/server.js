@@ -23,6 +23,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/visitor-accounts', visitorRoutes);
+// 
+app.use('/api/visitor-accounts/users', visitorRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

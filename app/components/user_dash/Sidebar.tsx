@@ -12,6 +12,8 @@ import {
   Menu,
   X,
   LucideIcon,
+  House,
+  Bed,
 } from "lucide-react";
 import UserAuthService, { UserData } from "@/app/services/user_auth";
 
@@ -31,8 +33,9 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   { name: "Home", icon: Home, href: "/user_dashboard" },
   { name: "My Bookings", icon: Calendar, href: "/pages/user_bookings" },
+  { name: "Book A Room", icon: Bed, href: "/pages/book_room" },
   { name: "Reports", icon: Calendar, href: "/pages/analytics" },
-  { name: "Notifications", icon: Bell, href: "/pages/notifications" },
+  { name: "Your AI Assistant", icon: Bell, href: "/pages/ai_assistant" },
   { name: "Settings", icon: Settings, href: "/pages/settings" },
 ];
 

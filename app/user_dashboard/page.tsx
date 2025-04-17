@@ -51,7 +51,7 @@ export default function DashboardPage() {
     // Fetch the user data from UserAuthService
     const userData = UserAuthService.getUserData();
     if (userData) {
-      setUserName(`${userData.firstName} ${userData.lastName}`); // Concatenate first and last name
+      setUserName(`${userData.firstName} ${userData.lastName}  `); // Concatenate first and last name
     }
   }, []);
 
