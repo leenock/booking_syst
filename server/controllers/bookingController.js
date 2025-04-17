@@ -146,7 +146,7 @@ const getBookingById = async (req, res) => {
     });
   }
 };
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Create booking
 
 const createBooking = async (req, res) => {
@@ -221,12 +221,19 @@ const createBooking = async (req, res) => {
       include: {
         bookings: {
           where: {
-            OR: [
+            status: {
+              in: ["PENDING", "CONFIRMED"], // Only active bookings
+            },
+            AND: [
               {
-                AND: [
-                  { checkIn: { lte: new Date(checkOut) } },
-                  { checkOut: { gte: new Date(checkIn) } },
-                ],
+                checkIn: {
+                  lt: new Date(checkOut), // Booking starts before new checkout
+                },
+              },
+              {
+                checkOut: {
+                  gt: new Date(checkIn), // Booking ends after new checkin
+                },
               },
             ],
           },
@@ -258,11 +265,23 @@ const createBooking = async (req, res) => {
 
     // Check for existing bookings
     if (room.bookings.length > 0) {
+      console.log(
+        "Filtered bookings (PENDING/CONFIRMED + overlap):",
+        room.bookings
+      );
+
       return res.status(400).json({
         success: false,
-        error: "Room is already booked for these dates",
+        error: "Room is already booked for these dates HUHU",
       });
     }
+    const allBookings = await prisma.booking.findMany({
+      where: {
+        roomId,
+      },
+    });
+
+    console.log("All bookings for this room:", allBookings);
 
     // Check if the number of adults exceeds the allowed limit (2 adults per room)
     if (adults > 2) {
@@ -315,7 +334,7 @@ const createBooking = async (req, res) => {
     });
   }
 };
-
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // update booking controller
 const updateBooking = async (req, res) => {
   try {
@@ -381,7 +400,6 @@ const updateBooking = async (req, res) => {
         ],
       },
     });
-    
 
     if (existingBookings.length > 0) {
       console.log("Existing bookings found, please try again"); // comment before production

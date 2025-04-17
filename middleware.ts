@@ -18,6 +18,7 @@ export function middleware(req: NextRequest) {
     "/pages/analytics",
     "/pages/notifications",
     "/pages/settings",
+    "/pages/book_room",
   ].some((route) => path.startsWith(route));
 
   // Redirect to admin login if trying to access admin route without admin token
@@ -53,6 +54,7 @@ export const config = {
     "/pages/analytics",
     "/pages/notifications",
     "/pages/settings",
+    "/pages/book_room",
     "/pages/auth/login",
   ],
 };

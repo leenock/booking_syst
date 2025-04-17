@@ -5,8 +5,10 @@ import { CalendarDays, ArrowRight, Hotel, Users, User, Mail, Phone, MessageSquar
 import { useState, useEffect } from 'react';
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
+import UserAuthService from "@/app/services/user_auth";
 
 type RoomType = "STANDARD" | "DELUXE" | "SUITE";
+
 
 interface Room {
   id: string;
@@ -47,6 +49,28 @@ const ROOM_PRICES: Record<RoomType, number> = {
 };
 
 export default function BookRoom() {
+
+    const [userData, setUserData] = useState<any>(null);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhoneNumber] = useState('');
+
+// Load user data
+const loadUserData = () => {
+    const user = UserAuthService.getUserData();
+    if (user) {
+      setUserData(user);
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+      setEmail(user.email || '');
+      setPhoneNumber(user.phone || '');
+  };
+}
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -56,7 +80,7 @@ export default function BookRoom() {
   } | null>(null);
   const [formData, setFormData] = useState<BookingFormData>({
     fullName: "",
-    email: "",
+    email:  "",
     phone: "",
     adults: 1,
     kids: 0,
@@ -362,39 +386,7 @@ export default function BookRoom() {
         });
 
         // Show success popup
-        const successPopup = document.createElement("div");
-        successPopup.className =
-          "fixed inset-0 flex items-center justify-center z-[100] bg-black/30 backdrop-blur-sm";
-        successPopup.innerHTML = `
-          <div class="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4 flex flex-col items-center">
-            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-2">Booking Created Successfully!</h3>
-            <p class="text-gray-600 text-center mb-4">Your booking has been saved and is now in the system.</p>
-            <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Continue
-            </button>
-          </div>
-        `;
-        document.body.appendChild(successPopup);
-
-        // Add click event to close the popup
-        successPopup.addEventListener("click", (e) => {
-          if (e.target === successPopup) {
-            document.body.removeChild(successPopup);
-          }
-        });
-
-        // Auto-close the popup after 3 seconds
-        setTimeout(() => {
-          if (document.body.contains(successPopup)) {
-            document.body.removeChild(successPopup);
-          }
-        }, 3000);
-
+      
         // Reset form
         setFormData({
           fullName: "",
@@ -469,18 +461,15 @@ export default function BookRoom() {
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Room Booking Form</h2>
-              <p className="text-sm text-gray-500 mt-1">Fill in the details below to book your room</p>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Room Booking Form
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Fill in the details below to book your room
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {isSuccess && (
-                <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  Booking created successfully!
-                </div>
-              )}
-
               <div className="group">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Room Type
@@ -606,7 +595,7 @@ export default function BookRoom() {
                       onChange={handleChange}
                       required
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-                      placeholder="john@example.com"
+                      placeholder="johndoe@example.com"
                     />
                   </div>
                 </div>
@@ -672,37 +661,50 @@ export default function BookRoom() {
               {/* Summary Section */}
               {formData.checkIn && formData.checkOut && (
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <h3 className="text-md font-medium text-gray-700 mb-3">Booking Summary</h3>
+                  <h3 className="text-md font-medium text-gray-700 mb-3">
+                    Booking Summary
+                  </h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Room Type:</span>
-                      <span className="font-medium">{formData.roomType} Room</span>
+                      <span className="font-medium">
+                        {formData.roomType} Room
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Price Per Night:</span>
-                      <span className="font-medium">Ksh {formData.roomPrice.toLocaleString()}</span>
+                      <span className="font-medium">
+                        Ksh {formData.roomPrice.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Check-in Date:</span>
-                      <span className="font-medium">{new Date(formData.checkIn).toLocaleDateString()}</span>
+                      <span className="font-medium">
+                        {new Date(formData.checkIn).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Check-out Date:</span>
-                      <span className="font-medium">{new Date(formData.checkOut).toLocaleDateString()}</span>
+                      <span className="font-medium">
+                        {new Date(formData.checkOut).toLocaleDateString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Number of Nights:</span>
                       <span className="font-medium">
                         {Math.ceil(
-                          (new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) / 
-                          (1000 * 60 * 60 * 24)
+                          (new Date(formData.checkOut).getTime() -
+                            new Date(formData.checkIn).getTime()) /
+                            (1000 * 60 * 60 * 24)
                         )}
                       </span>
                     </div>
                     <div className="border-t border-gray-200 pt-2 mt-2">
                       <div className="flex justify-between font-semibold">
                         <span>Total Amount:</span>
-                        <span>Ksh {calculateTotalAmount().toLocaleString()}</span>
+                        <span>
+                          Ksh {calculateTotalAmount().toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
