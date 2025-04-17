@@ -1,7 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import Sidebar from "@/app/components/user_dash/Sidebar";
-import { CalendarDays, Clock, User, Mail, Phone, Home, Users, Tag, AlertCircle } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  User,
+  Mail,
+  Phone,
+  Home,
+  Users,
+  Tag,
+  AlertCircle,
+} from "lucide-react";
 import UserAuthService, { UserData } from "@/app/services/user_auth";
 
 interface Booking {
@@ -38,13 +48,17 @@ export default function UserBookings() {
     const fetchBookings = async () => {
       const userData = UserAuthService.getUserData();
 
-      if (userData && userData.email && userData.firstName && userData.lastName) {
+      if (
+        userData &&
+        userData.email &&
+        userData.firstName &&
+        userData.lastName
+      ) {
         const email = userData.email;
         setUserName(email);
 
         const fullName = userData.firstName + " " + userData.lastName;
         setUserName(fullName);
-
 
         const url = `http://localhost:5000/api/booking/visitor/${email}`;
 
@@ -76,26 +90,26 @@ export default function UserBookings() {
   // Function to get status badge color
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Format date nicely
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'short', 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
@@ -253,7 +267,7 @@ export default function UserBookings() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">
-                            ${booking.roomPrice.toFixed(2)}
+                            Ksh {booking.roomPrice.toFixed(2)}
                           </div>
                           <div className="text-xs text-gray-500">
                             {booking.paymentMethod}

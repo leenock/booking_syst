@@ -272,7 +272,7 @@ const createBooking = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-        error: "Room is already booked for these dates HUHU",
+        error: "Room is already booked for these dates",
       });
     }
     const allBookings = await prisma.booking.findMany({
