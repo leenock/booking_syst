@@ -380,12 +380,15 @@ const updateBooking = async (req, res) => {
       where: {
         AND: [
           {
-            NOT: {
-              id: id, // Exclude current booking
-            },
+            NOT: { id: id }, // exclude current booking
           },
           {
-            roomType: roomType, // ✅ Only check overlap on the same room
+            roomType: roomType,
+          },
+          {
+            status: {
+              not: "CHECKED_OUT", // ✅ ignore checked out bookings
+            },
           },
           {
             OR: [
