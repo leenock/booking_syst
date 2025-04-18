@@ -123,6 +123,11 @@ export default function UserBookings() {
     return diffDays;
   };
 
+  //calculate total amount on stay duration
+  const calculateTotalAmount = (price: number, duration: number) => {
+    return price * duration;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50">
       <Sidebar isOpen={isSidebarOpen} onOpenChange={setIsSidebarOpen} />
@@ -267,8 +272,16 @@ export default function UserBookings() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">
-                            Ksh {booking.roomPrice.toFixed(2)}
+                            Ksh{" "}
+                            {(
+                              booking.roomPrice *
+                              calculateStayDuration(
+                                booking.checkIn,
+                                booking.checkOut
+                              )
+                            ).toFixed(2)}
                           </div>
+
                           <div className="text-xs text-gray-500">
                             {booking.paymentMethod}
                           </div>

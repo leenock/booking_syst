@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
@@ -9,10 +9,9 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import Footer from '@/app/components/landingpage/Footer';
 
-
 const cottages = [
   {
-    id: 1,
+    id: 'standard',
     name: 'Standard Room',
     description: 'Serene cottage with stunning lake views, perfect for a romantic getaway.',
     price: 8000,
@@ -23,7 +22,7 @@ const cottages = [
     amenities: ['High-speed WiFi', '4K Smart TV']
   },
   {
-    id: 2,
+    id: 'deluxe',
     name: 'Deluxe Room',
     description: 'Spacious villa with multiple bedrooms, ideal for family vacations.',
     price: 10000,
@@ -34,7 +33,7 @@ const cottages = [
     amenities: ['High-speed WiFi', '4K Smart TV', 'Premium Coffee Station', 'Mini Bar']
   },
   {
-    id: 3,
+    id: 'suite',
     name: 'Executive Suite',
     description: 'Luxury cottage with modern amenities and private pool.',
     price: 12000,
@@ -48,22 +47,72 @@ const cottages = [
 
 export default function CottagesPage() {
   const router = useRouter();
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [guests, setGuests] = useState(1);
-  const [selectedCottage, setSelectedCottage] = useState<number | null>(null);
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const today = new Date();
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    checkIn: null as Date | null,
+    checkOut: null as Date | null,
+    guests: 1,
+    roomType: ''
+  });
+
+  useEffect(() => {
+    // Fetch unavailable dates from API
+    const fetchUnavailableDates = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/booking/booked_dates');
+        if (!response.ok) {
+          throw new Error('Failed to fetch unavailable dates');
+        }
+        const data = await response.json();
+        
+        // Parse dates from API response
+        let parsedDates: Date[] = [];
+        
+        if (Array.isArray(data)) {
+          parsedDates = data.map((dateString: string) => new Date(dateString));
+        } else if (data && typeof data === 'object') {
+          const datesArray = data.dates || data.bookedDates || data.unavailableDates || [];
+          if (Array.isArray(datesArray)) {
+            parsedDates = datesArray.map((dateString: string) => new Date(dateString));
+          }
+        }
+        
+        console.log('API Response:', data);
+        console.log('Parsed Dates:', parsedDates);
+        
+        setUnavailableDates(parsedDates);
+      } catch (error) {
+        console.error('Error fetching unavailable dates:', error);
+        // Fallback to default dates in case of error
+        setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, []);
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleBooking = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!checkIn || !checkOut) return;
+    if (!formData.checkIn || !formData.checkOut) {
+      alert('Please select check-in and check-out dates');
+      return;
+    }
 
     const params = new URLSearchParams({
-      checkIn: checkIn.toISOString().split('T')[0],
-      checkOut: checkOut.toISOString().split('T')[0],
-      adults: guests.toString(),
-      children: '0',
-      roomType: selectedCottage ? selectedCottage.toString() : 'any'
+      checkIn: formData.checkIn.toLocaleDateString('en-CA'),  // Format as YYYY-MM-DD
+      checkOut: formData.checkOut.toLocaleDateString('en-CA'),
+      roomType: formData.roomType || 'any'
     });
 
     router.push(`/pages/booking?${params.toString()}`);
@@ -101,66 +150,70 @@ export default function CottagesPage() {
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-12 -mt-20 relative z-10">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Book Your Stay</h2>
             <form onSubmit={handleBooking} className="space-y-6">
-              <div className="grid md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Check-in</label>
-                  <DatePicker
-                    selected={checkIn}
-                    onChange={(date) => setCheckIn(date)}
-                    selectsStart
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={new Date()}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholderText="Select date"
-                    required
-                  />
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* Check-in Date */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Check-in</label>
+                  <div className="relative">
+                    <DatePicker
+                      selected={formData.checkIn}
+                      onChange={(date) => handleInputChange('checkIn', date)}
+                      selectsStart
+                      startDate={formData.checkIn}
+                      endDate={formData.checkOut}
+                      minDate={today}
+                      excludeDates={unavailableDates}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholderText="Select check-in date"
+                      required
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Check-out</label>
-                  <DatePicker
-                    selected={checkOut}
-                    onChange={(date) => setCheckOut(date)}
-                    selectsEnd
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={checkIn || new Date()}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholderText="Select date"
-                    required
-                  />
+
+                {/* Check-out Date */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Check-out</label>
+                  <div className="relative">
+                    <DatePicker
+                      selected={formData.checkOut}
+                      onChange={(date) => handleInputChange('checkOut', date)}
+                      selectsEnd
+                      startDate={formData.checkIn}
+                      endDate={formData.checkOut}
+                      minDate={formData.checkIn || today}
+                      excludeDates={unavailableDates}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      placeholderText="Select check-out date"
+                      required
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Guests</label>
-                  <select
-                    value={guests}
-                    onChange={(e) => setGuests(Number(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  >
-                    {[1, 2, 3, 4, 5, 6].map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === 1 ? 'Guest' : 'Guests'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Cottage Type</label>
-                  <select
-                    value={selectedCottage || ''}
-                    onChange={(e) => setSelectedCottage(Number(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                  >
-                    <option value="">Select a cottage</option>
-                    {cottages.map((cottage) => (
-                      <option key={cottage.id} value={cottage.id}>
-                        {cottage.name}
-                      </option>
-                    ))}
-                  </select>
+              
+                {/* Room Type */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Room Type</label>
+                  <div className="relative">
+                    <select
+                      value={formData.roomType}
+                      onChange={(e) => handleInputChange('roomType', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none"
+                    >
+                      <option value="">Any Room Type</option>
+                      {cottages.map((cottage) => (
+                        <option key={cottage.id} value={cottage.id}>
+                          {cottage.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Home className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-center">
+
+              {/* Submit Button */}
+              <div className="flex justify-center mt-8">
                 <button
                   type="submit"
                   className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-12 py-4 rounded-lg

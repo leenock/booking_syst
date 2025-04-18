@@ -1,33 +1,91 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CalendarIcon, UserGroupIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  CalendarIcon,
+  UserGroupIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import Image from "next/image";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function Hero() {
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const router = useRouter();
+  const today = new Date(); // Get today's date
+
   const [formData, setFormData] = useState({
-    checkIn: '',
-    checkOut: '',
-    guests: '1',
-    roomType: 'any'
+    checkIn: null as Date | null,
+    checkOut: null as Date | null,
+
+    roomType: "any",
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  useEffect(() => {
+    // Fetch unavailable dates from API
+    const fetchUnavailableDates = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/booking/booked_dates"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch unavailable dates");
+        }
+        const data = await response.json();
+
+        // Handle different response formats
+        let parsedDates: Date[] = [];
+
+        if (Array.isArray(data)) {
+          // If data is directly an array of dates
+          parsedDates = data.map((dateString: string) => new Date(dateString));
+        } else if (data && typeof data === "object") {
+          // If data is an object with a dates property or similar
+          const datesArray =
+            data.dates || data.bookedDates || data.unavailableDates || [];
+          if (Array.isArray(datesArray)) {
+            parsedDates = datesArray.map(
+              (dateString: string) => new Date(dateString)
+            );
+          }
+        }
+
+        // Log for debugging
+        console.log("API Response:", data);
+        console.log("Parsed Dates:", parsedDates);
+
+        setUnavailableDates(parsedDates);
+      } catch (error) {
+        console.error("Error fetching unavailable dates:", error);
+        // Fallback to default dates in case of error
+        setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, []);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const params = new URLSearchParams({
-      checkIn: formData.checkIn,
-      checkOut: formData.checkOut,
-      adults: formData.guests,
-      children: '0',
-      roomType: formData.roomType
+      checkIn: formData.checkIn
+        ? formData.checkIn.toLocaleDateString("en-CA") // Uses YYYY-MM-DD format
+        : "",
+      checkOut: formData.checkOut
+        ? formData.checkOut.toLocaleDateString("en-CA") // Uses YYYY-MM-DD format
+        : "",
+
+      roomType: formData.roomType,
     });
 
     router.push(`/pages/booking?${params.toString()}`);
@@ -58,7 +116,8 @@ export default function Hero() {
                 <span className="text-amber-400">Like Never Before</span>
               </h1>
               <p className="text-lg text-gray-300 max-w-xl">
-                Discover the perfect blend of comfort and elegance in our carefully curated selection of rooms and suites.
+                Discover the perfect blend of comfort and elegance in our
+                carefully curated selection of rooms and suites.
               </p>
             </div>
 
@@ -81,46 +140,63 @@ export default function Hero() {
 
           {/* Right Column - Booking Form */}
           <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl animate-fade-in-up animation-delay-150">
-            <h2 className="text-2xl font-bold text-white mb-6">Book Your Stay</h2>
-            
+            <h2 className="text-2xl font-bold text-white mb-6">
+              Book Your Stays
+            </h2>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Check-in & Check-out */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Check-in</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="checkIn"
-                      value={formData.checkIn}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
-                      required
-                      onFocus={(e) => e.target.showPicker()}
-                    />
-                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Check-in
+                  </label>
+                  <DatePicker
+                    selected={formData.checkIn}
+                    onChange={(date) => {
+                      setFormData({
+                        ...formData,
+                        checkIn: date,
+                        checkOut:
+                          formData.checkOut && date && formData.checkOut < date
+                            ? null
+                            : formData.checkOut,
+                      });
+                    }}
+                    excludeDates={unavailableDates}
+                    minDate={today} // Set minimum date to today
+                    placeholderText="Select check-in date"
+                    selectsStart
+                    startDate={formData.checkIn}
+                    endDate={formData.checkOut}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Check-out</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="checkOut"
-                      value={formData.checkOut}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors"
-                      required
-                      onFocus={(e) => e.target.showPicker()}
-                    />
-                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Check-out
+                  </label>
+                  <DatePicker
+                    selected={formData.checkOut}
+                    onChange={(date) =>
+                      setFormData({ ...formData, checkOut: date })
+                    }
+                    excludeDates={unavailableDates}
+                    minDate={formData.checkIn || today} // Use check-in date or today, whichever is later
+                    placeholderText="Select check-out date"
+                    selectsEnd
+                    startDate={formData.checkIn}
+                    endDate={formData.checkOut}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
+                  />
                 </div>
               </div>
 
               {/* Room Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Room Type</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Room Type
+                </label>
                 <div className="relative">
                   <select
                     name="roomType"
@@ -128,32 +204,20 @@ export default function Hero() {
                     onChange={handleInputChange}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
                   >
-                    <option value="any" className="bg-gray-900">Any Room</option>
-                    <option value="standard" className="bg-gray-900">Standard Room</option>
-                    <option value="deluxe" className="bg-gray-900">Deluxe Room</option>
-                    <option value="suite" className="bg-gray-900">Executive Suite</option>
+                    <option value="any" className="bg-gray-900">
+                      Any Room
+                    </option>
+                    <option value="standard" className="bg-gray-900">
+                      Standard Room
+                    </option>
+                    <option value="deluxe" className="bg-gray-900">
+                      Deluxe Room
+                    </option>
+                    <option value="suite" className="bg-gray-900">
+                      Executive Suite
+                    </option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-
-              {/* Guests */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Guests</label>
-                <div className="relative">
-                  <select
-                    name="guests"
-                    value={formData.guests}
-                    onChange={handleInputChange}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
-                  >
-                    {[1, 2, 3, 4].map((num) => (
-                      <option key={num} value={num} className="bg-gray-900">
-                        {num} {num === 1 ? 'Guest' : 'Guests'}
-                      </option>
-                    ))}
-                  </select>
-                  <UserGroupIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
 

@@ -600,6 +600,48 @@ const getBookingsByVisitorEmail = async (req, res) => {
   }
 };
 
+// Get booked dates
+// Get all booked dates across all rooms
+const getBookedDates = async (req, res) => {
+  try {
+    const bookings = await prisma.booking.findMany({
+      where: {
+        status: {
+          in: ["PENDING", "CONFIRMED"], // Only active bookings
+        },
+      },
+      select: {
+        checkIn: true,
+        checkOut: true,
+      },
+    });
+
+    const bookedDates = new Set();
+
+    bookings.forEach(({ checkIn, checkOut }) => {
+      const current = new Date(checkIn);
+      const end = new Date(checkOut);
+
+      while (current < end) {
+        bookedDates.add(current.toISOString().split("T")[0]);
+        current.setDate(current.getDate() + 1);
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      bookedDates: Array.from(bookedDates),
+    });
+  } catch (error) {
+    console.error("Error fetching booked dates:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch booked dates",
+    });
+  }
+};
+
+
 module.exports = {
   getAllBookings,
   getBookingById,
@@ -608,4 +650,5 @@ module.exports = {
   deleteBooking,
   getUserBookings,
   getBookingsByVisitorEmail,
+  getBookedDates,
 };

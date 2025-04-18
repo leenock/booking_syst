@@ -262,9 +262,16 @@ export default function DashboardOverview() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-medium text-gray-900">
-                          Ksh {booking.roomPrice.toFixed(2)}
-                        </div>
+                      <div className="font-medium text-gray-900">
+                            Ksh{" "}
+                            {(
+                              booking.roomPrice *
+                              calculateStayDuration(
+                                booking.checkIn,
+                                booking.checkOut
+                              )
+                            ).toFixed(2)}
+                          </div>
                         <div className="text-xs text-gray-500">
                           {booking.paymentMethod}
                         </div>

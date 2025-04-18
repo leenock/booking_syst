@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Calendar,
   Phone,
@@ -20,29 +22,107 @@ function BookingPageContent() {
   const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
+    fullName: "",
+    email: "",
+    phone: "",
     adults: 1,
     kids: 0,
-    specialRequest: '',
-    roomType: '',
-    roomPrice: '',
-    roomId: '',
-    checkIn: '',
-    checkOut: ''
+    specialRequest: "",
+    roomType: "",
+    roomPrice: "",
+    roomId: "",
+    checkIn: "",
+    checkOut: "",
   });
+  const [checkInDate, setCheckInDate] = useState<Date | null>(null);
+  const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const today = new Date(); // Get today's date
 
   const roomTypes = [
-    { id: "standard", name: "Standard Room"},
+    { id: "standard", name: "Standard Room" },
     { id: "deluxe", name: "Deluxe Room" },
     { id: "suite", name: "Executive Suite" },
   ];
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Parse query parameters if any
+    if (searchParams) {
+      const checkInParam = searchParams.get("checkIn");
+      const checkOutParam = searchParams.get("checkOut");
+      const adultsParam = searchParams.get("adults");
+      const kidsParam = searchParams.get("children");
+      const roomTypeParam = searchParams.get("roomType");
+
+      if (checkInParam) {
+        const date = new Date(checkInParam);
+        setCheckInDate(date);
+        setFormData((prev) => ({ ...prev, checkIn: checkInParam }));
+      }
+
+      if (checkOutParam) {
+        const date = new Date(checkOutParam);
+        setCheckOutDate(date);
+        setFormData((prev) => ({ ...prev, checkOut: checkOutParam }));
+      }
+
+      if (adultsParam) {
+        setFormData((prev) => ({ ...prev, adults: parseInt(adultsParam) }));
+      }
+
+      if (kidsParam) {
+        setFormData((prev) => ({ ...prev, kids: parseInt(kidsParam) }));
+      }
+
+      if (roomTypeParam && roomTypeParam !== "any") {
+        setFormData((prev) => ({ ...prev, roomType: roomTypeParam }));
+      }
+    }
+
+    // Fetch unavailable dates
+    fetchUnavailableDates();
+  }, [searchParams]);
+
+  const fetchUnavailableDates = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/booking/booked_dates"
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch unavailable dates");
+      }
+      const data = await response.json();
+
+      // Handle different response formats
+      let parsedDates: Date[] = [];
+
+      if (Array.isArray(data)) {
+        // If data is directly an array of dates
+        parsedDates = data.map((dateString: string) => new Date(dateString));
+      } else if (data && typeof data === "object") {
+        // If data is an object with a dates property or similar
+        const datesArray =
+          data.dates || data.bookedDates || data.unavailableDates || [];
+        if (Array.isArray(datesArray)) {
+          parsedDates = datesArray.map(
+            (dateString: string) => new Date(dateString)
+          );
+        }
+      }
+
+      console.log("API Response:", data);
+      console.log("Parsed Dates:", parsedDates);
+
+      setUnavailableDates(parsedDates);
+    } catch (error) {
+      console.error("Error fetching unavailable dates:", error);
+      // Fallback to default dates in case of error
+      setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -51,6 +131,26 @@ function BookingPageContent() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckInChange = (date: Date | null) => {
+    setCheckInDate(date);
+    if (date) {
+      setFormData((prev) => ({
+        ...prev,
+        checkIn: date.toISOString().split("T")[0],
+      }));
+    }
+  };
+
+  const handleCheckOutChange = (date: Date | null) => {
+    setCheckOutDate(date);
+    if (date) {
+      setFormData((prev) => ({
+        ...prev,
+        checkOut: date.toISOString().split("T")[0],
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,14 +232,18 @@ function BookingPageContent() {
                     Check-in Date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
-                    <input
-                      type="date"
-                      name="checkIn"
-                      value={formData.checkIn}
-                      onChange={handleInputChange}
-                      required
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                    <DatePicker
+                      selected={checkInDate}
+                      onChange={handleCheckInChange}
+                      selectsStart
+                      startDate={checkInDate}
+                      endDate={checkOutDate}
+                      minDate={today}
+                      excludeDates={unavailableDates}
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
+                      placeholderText="Select check-in date"
+                      required
                     />
                   </div>
                 </div>
@@ -149,14 +253,18 @@ function BookingPageContent() {
                     Check-out Date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500" />
-                    <input
-                      type="date"
-                      name="checkOut"
-                      value={formData.checkOut}
-                      onChange={handleInputChange}
-                      required
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                    <DatePicker
+                      selected={checkOutDate}
+                      onChange={handleCheckOutChange}
+                      selectsEnd
+                      startDate={checkInDate}
+                      endDate={checkOutDate}
+                      minDate={checkInDate || today}
+                      excludeDates={unavailableDates}
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
+                      placeholderText="Select check-out date"
+                      required
                     />
                   </div>
                 </div>
@@ -217,7 +325,7 @@ function BookingPageContent() {
                     <option value="">Select a room type</option>
                     {roomTypes.map((room) => (
                       <option key={room.id} value={room.id}>
-                        {room.name} 
+                        {room.name}
                       </option>
                     ))}
                   </select>
