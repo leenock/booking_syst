@@ -3,28 +3,26 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CalendarIcon,
-  UserGroupIcon,
+
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 
 export default function Hero() {
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const router = useRouter();
-  const today = new Date(); // Get today's date
+  const today = new Date();
 
   const [formData, setFormData] = useState({
     checkIn: null as Date | null,
     checkOut: null as Date | null,
-
     roomType: "any",
   });
 
   useEffect(() => {
-    // Fetch unavailable dates from API
     const fetchUnavailableDates = async () => {
       try {
         const response = await fetch(
@@ -34,15 +32,11 @@ export default function Hero() {
           throw new Error("Failed to fetch unavailable dates");
         }
         const data = await response.json();
-
-        // Handle different response formats
         let parsedDates: Date[] = [];
 
         if (Array.isArray(data)) {
-          // If data is directly an array of dates
           parsedDates = data.map((dateString: string) => new Date(dateString));
         } else if (data && typeof data === "object") {
-          // If data is an object with a dates property or similar
           const datesArray =
             data.dates || data.bookedDates || data.unavailableDates || [];
           if (Array.isArray(datesArray)) {
@@ -52,14 +46,9 @@ export default function Hero() {
           }
         }
 
-        // Log for debugging
-        console.log("API Response:", data);
-        console.log("Parsed Dates:", parsedDates);
-
         setUnavailableDates(parsedDates);
       } catch (error) {
         console.error("Error fetching unavailable dates:", error);
-        // Fallback to default dates in case of error
         setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
       }
     };
@@ -77,23 +66,32 @@ export default function Hero() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const params = new URLSearchParams({
-      checkIn: formData.checkIn
-        ? formData.checkIn.toLocaleDateString("en-CA") // Uses YYYY-MM-DD format
-        : "",
-      checkOut: formData.checkOut
-        ? formData.checkOut.toLocaleDateString("en-CA") // Uses YYYY-MM-DD format
-        : "",
+    if (!formData.checkIn || !formData.checkOut) {
+      toast.error("Please select both check-in and check-out dates.");
+      return;
+    }
 
+    const params = new URLSearchParams({
+      checkIn: formData.checkIn.toLocaleDateString("en-CA"),
+      checkOut: formData.checkOut.toLocaleDateString("en-CA"),
       roomType: formData.roomType,
     });
 
-    router.push(`/pages/booking?${params.toString()}`);
+    toast.success("Room is available!", {
+      duration: 2000,
+      style: {
+        background: "#1f2937",
+        color: "#fff",
+      },
+    });
+
+    setTimeout(() => {
+      router.push(`/pages/booking?${params.toString()}`);
+    }, 2100);
   };
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-gray-900">
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/images/luxury.jpg"
@@ -108,7 +106,6 @@ export default function Hero() {
 
       <div className="relative z-10 w-full">
         <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          {/* Left Column - Hero Content */}
           <div className="space-y-8">
             <div className="space-y-4 animate-fade-in-up">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white font-serif">
@@ -121,7 +118,6 @@ export default function Hero() {
               </p>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-3 gap-8 py-8 border-t border-white/10 animate-fade-in-up animation-delay-300">
               <div>
                 <h3 className="text-3xl font-bold text-amber-400">20+</h3>
@@ -138,14 +134,12 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Right Column - Booking Form */}
           <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl animate-fade-in-up animation-delay-150">
             <h2 className="text-2xl font-bold text-white mb-6">
               Book Your Stays
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Check-in & Check-out */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -164,7 +158,7 @@ export default function Hero() {
                       });
                     }}
                     excludeDates={unavailableDates}
-                    minDate={today} // Set minimum date to today
+                    minDate={today}
                     placeholderText="Select check-in date"
                     selectsStart
                     startDate={formData.checkIn}
@@ -182,7 +176,7 @@ export default function Hero() {
                       setFormData({ ...formData, checkOut: date })
                     }
                     excludeDates={unavailableDates}
-                    minDate={formData.checkIn || today} // Use check-in date or today, whichever is later
+                    minDate={formData.checkIn || today}
                     placeholderText="Select check-out date"
                     selectsEnd
                     startDate={formData.checkIn}
@@ -192,7 +186,6 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Room Type */}
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Room Type
@@ -221,7 +214,6 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg mt-6"
