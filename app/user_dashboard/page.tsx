@@ -49,8 +49,6 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [dateFilter, setDateFilter] = useState("all");
 
-  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE"];
-
   useEffect(() => {
     const fetchBookings = async () => {
       const userData = UserAuthService.getUserData();
@@ -69,10 +67,7 @@ export default function DashboardPage() {
 
           setBookings(json.data);
         } catch (error: any) {
-          console.error(
-            "[Analytics] Error loading bookings:",
-            error.message || error
-          );
+          console.error("Error loading bookings:", error.message || error);
         } finally {
           setLoading(false);
         }
@@ -84,7 +79,13 @@ export default function DashboardPage() {
     fetchBookings();
   }, []);
 
-  // Filter bookings based on date range
+  useEffect(() => {
+    const userData = UserAuthService.getUserData();
+    if (userData?.firstName && userData?.lastName) {
+      setUserName(`${userData.firstName} ${userData.lastName}`);
+    }
+  }, []);
+
   const getFilteredBookings = () => {
     if (dateFilter === "all") return bookings;
 
@@ -104,31 +105,32 @@ export default function DashboardPage() {
     );
   };
 
-  // Calculate total spent (only for checked out bookings)
-  const totalSpent = getFilteredBookings()
-    .filter(
-      (booking) =>
-        booking.status === "CHECKED_OUT" ||
-        new Date(booking.checkOut) < new Date()
-    )
-    .reduce((sum, booking) => sum + booking.roomPrice, 0);
+  const calculateStayDuration = (checkIn: string, checkOut: string) => {
+    const startDate = new Date(checkIn);
+    const endDate = new Date(checkOut);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
-  // Calculate average price per night (only for checked out bookings)
   const checkedOutBookings = getFilteredBookings().filter(
     (booking) =>
       booking.status === "CHECKED_OUT" ||
       new Date(booking.checkOut) < new Date()
   );
 
-  const avgPrice =
+  const totalSpent = checkedOutBookings.reduce(
+    (sum, booking) =>
+      sum + booking.roomPrice * calculateStayDuration(booking.checkIn, booking.checkOut),
+    0
+  );
+
+  const avgSpent =
     checkedOutBookings.length > 0
       ? (
-          checkedOutBookings.reduce(
-            (sum, booking) => sum + booking.roomPrice,
-            0
-          ) / checkedOutBookings.length
+          totalSpent / checkedOutBookings.length
         ).toFixed(2)
-      : 0;
+      : "0.00";
 
   useEffect(() => {
     const userData = UserAuthService.getUserData();
@@ -272,7 +274,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-500">
-                      Total Amount Spent
+                      Total Amount Spents
                     </p>
                     <h3 className="text-2xl font-bold text-gray-900 mt-1">
                       Ksh {totalSpent.toFixed(2)}
@@ -290,7 +292,7 @@ export default function DashboardPage() {
                       Average Amount Spent
                     </p>
                     <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                      Ksh {avgPrice}
+                      Ksh {avgSpent}
                     </h3>
                   </div>
                   <div className="p-3 bg-blue-100 rounded-full">

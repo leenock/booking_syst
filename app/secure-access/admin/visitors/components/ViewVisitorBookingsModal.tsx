@@ -46,22 +46,37 @@ export default function ViewVisitorBookingsModal({
   const fetchVisitorBookings = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`http://localhost:5000/api/booking/visitor/${visitorEmail}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
+      const response = await axios.get(
+        `http://localhost:5000/api/booking/visitor/${visitorEmail}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-      });
+      );
       if (response.data.success) {
         setBookings(response.data.data);
       } else {
-        setError('Failed to fetch bookings');
+        setError("Failed to fetch bookings");
       }
     } catch (err) {
-      setError('Error fetching bookings');
-      console.error('Error fetching bookings:', err);
+      setError("Error fetching bookings");
+      console.error("Error fetching bookings:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateTotalAmount = (
+    checkIn: string,
+    checkOut: string,
+    price: number
+  ): number => {
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const durationInMs = checkOutDate.getTime() - checkInDate.getTime();
+    const durationInDays = Math.ceil(durationInMs / (1000 * 60 * 60 * 24));
+    return durationInDays * price;
   };
 
   const getStatusColor = (status: string) => {
@@ -85,7 +100,7 @@ export default function ViewVisitorBookingsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-white rounded-xl shadow-lg w-full max-w-7xl max-h-[95vh] overflow-y-auto relative">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -171,12 +186,12 @@ export default function ViewVisitorBookingsModal({
                     <tr key={booking.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {booking.room?.roomNumber || 'N/A'}
+                          {booking.room?.roomNumber || "N/A"}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {booking.room?.type || 'N/A'}
+                          {booking.room?.type || "N/A"}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -191,10 +206,15 @@ export default function ViewVisitorBookingsModal({
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          <span className="font-medium">{booking.adults}</span> Adults
+                          <span className="font-medium">{booking.adults}</span>{" "}
+                          Adults
                           {booking.kids > 0 && (
                             <span className="ml-1">
-                              + <span className="font-medium">{booking.kids}</span> Kids
+                              +{" "}
+                              <span className="font-medium">
+                                {booking.kids}
+                              </span>{" "}
+                              Kids
                             </span>
                           )}
                         </div>
@@ -210,7 +230,12 @@ export default function ViewVisitorBookingsModal({
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          Ksh {booking.roomPrice.toFixed(2)}
+                          Ksh{" "}
+                          {calculateTotalAmount(
+                            booking.checkIn,
+                            booking.checkOut,
+                            booking.roomPrice
+                          ).toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -228,4 +253,4 @@ export default function ViewVisitorBookingsModal({
       </div>
     </div>
   );
-} 
+}

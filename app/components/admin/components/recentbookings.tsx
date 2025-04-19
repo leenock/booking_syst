@@ -24,6 +24,7 @@ interface Booking {
   visitorName: string;
   visitorEmail: string;
   visitorPhone: string;
+  roomPrice: number;
   checkIn: string;
   checkOut: string;
   status: BookingStatus;
@@ -78,6 +79,16 @@ export default function RecentBookings() {
       setLoading(false);
       setButtonLoading(false); // Ensure loading is turned off after the fetch
     }
+  };
+
+
+  // Calculate stay duration
+  const calculateStayDuration = (checkIn: string, checkOut: string) => {
+    const startDate = new Date(checkIn);
+    const endDate = new Date(checkOut);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   // Status badge styling helper
@@ -242,7 +253,14 @@ export default function RecentBookings() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-2.5 py-1 text-xs font-extrabold">
-                      {booking.totalAmount}
+                    Ksh{" "}
+                            {(
+                              booking.totalAmount *
+                              calculateStayDuration(
+                                booking.checkIn,
+                                booking.checkOut
+                              )
+                            ).toFixed(2)}
                     </span>
                   </td>
 

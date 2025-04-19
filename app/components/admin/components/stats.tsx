@@ -9,8 +9,16 @@ interface Stats {
   activeVisitorAccounts: number;
   inactiveVisitorAccounts: number;
   systemUsers: number;
+
   roomCount: number;
   totalRevenue: string;
+}
+
+interface Booking {
+  checkIn: string;
+  checkOut: string;
+  roomPrice: string;
+  status: string; // Assuming status is a string, adjust if necessary
 }
 
 const Stats = () => {
@@ -55,19 +63,39 @@ const Stats = () => {
           ? bookingRes.data.data
           : [];
 
-        const checkedOutBookings = bookings.filter(
-          (booking: any) => booking.status === "CHECKED_OUT"
+      
+        // Function to calculate stay duration in days
+        const calculateStayDuration = (checkIn: string, checkOut: string) => {
+          const startDate = new Date(checkIn);
+          const endDate = new Date(checkOut);
+          const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays;
+        };
+
+        // Calculate total revenue from checked-out bookings
+        const checkedOutBooking = bookings.filter(
+          (booking: Booking) => booking.status === "CHECKED_OUT"
         );
 
-        const totalRevenue = checkedOutBookings.reduce(
-          (sum: number, booking: any) => {
-            const roomPrice = Number(booking.roomPrice);
-            return sum + (isNaN(roomPrice) ? 0 : roomPrice);
+        const totalRevenue = checkedOutBooking.reduce(
+          (sum: number, booking: Booking) => {
+            const duration = calculateStayDuration(
+              booking.checkIn,
+              booking.checkOut
+            );
+            const pricePerNight = Number(booking.roomPrice);
+
+            if (isNaN(pricePerNight) || pricePerNight <= 0 || duration <= 0) {
+              return sum; // Skip invalid entries
+            }
+
+            return sum + pricePerNight * duration;
           },
           0
         );
 
-        // Update State with Fetched Stats
+        // Update stats
         setStats({
           visitorAccounts: visitorAccounts.length,
           activeVisitorAccounts,
@@ -147,7 +175,7 @@ const Stats = () => {
           </div>
           <div className="bg-purple-200 p-6 rounded-lg shadow-md hover:shadow-2xl transition-all duration-300 ease-in-out hover:bg-purple-300 backdrop-blur-lg bg-opacity-60">
             <p className="text-sm text-black-500 font-semibold">
-              Total Revenue
+              Total Revenues
             </p>
             <h4 className="text-xl font-semibold text-gray-800">
               {stats.totalRevenue}

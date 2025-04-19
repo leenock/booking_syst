@@ -21,6 +21,7 @@ interface Booking {
   visitorName: string;
   visitorEmail: string;
   visitorPhone: string;
+  roomPrice: number;
   checkIn: string;
   checkOut: string;
   status: BookingStatus;
@@ -111,6 +112,15 @@ export default function BookingsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+   // Calculate stay duration
+   const calculateStayDuration = (checkIn: string, checkOut: string) => {
+    const startDate = new Date(checkIn);
+    const endDate = new Date(checkOut);
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   const getStatusColor = (status: BookingStatus) => {
@@ -405,7 +415,14 @@ export default function BookingsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      Ksh {booking.totalAmount.toLocaleString()}
+                    Ksh{" "}
+                            {(
+                              booking.totalAmount *
+                              calculateStayDuration(
+                                booking.checkIn,
+                                booking.checkOut
+                              )
+                            ).toFixed(2)}
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 max-w-xs truncate">
