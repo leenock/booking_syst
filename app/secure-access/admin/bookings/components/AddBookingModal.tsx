@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import Toast from "@/app/components/ui/Toast";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface AddBookingModalProps {
   isOpen: boolean;
@@ -88,6 +90,53 @@ export default function AddBookingModal({
     checkOut: "",
     paymentMethod: "CASH",
   });
+
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const today = new Date(); // Get today's date
+
+  useEffect(() => {
+    // Fetch unavailable dates from API
+    const fetchUnavailableDates = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/booking/booked_dates"
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch unavailable dates");
+        }
+        const data = await response.json();
+
+        // Handle different response formats
+        let parsedDates: Date[] = [];
+
+        if (Array.isArray(data)) {
+          // If data is directly an array of dates
+          parsedDates = data.map((dateString: string) => new Date(dateString));
+        } else if (data && typeof data === "object") {
+          // If data is an object with a dates property or similar
+          const datesArray =
+            data.dates || data.bookedDates || data.unavailableDates || [];
+          if (Array.isArray(datesArray)) {
+            parsedDates = datesArray.map(
+              (dateString: string) => new Date(dateString)
+            );
+          }
+        }
+
+        // Log for debugging
+        console.log("API Response:", data);
+        console.log("Parsed Dates:", parsedDates);
+
+        setUnavailableDates(parsedDates);
+      } catch (error) {
+        console.error("Error fetching unavailable dates:", error);
+        // Fallback to default dates in case of error
+        setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, []);
 
   // Reset toast state when modal is closed
   useEffect(() => {
@@ -507,14 +556,24 @@ export default function AddBookingModal({
                   Check-in Date
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 pointer-events-none" />
-                  <input
-                    type="date"
-                    name="checkIn"
-                    value={formData.checkIn}
-                    onChange={handleChange}
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                  <DatePicker
+                    selected={
+                      formData.checkIn ? new Date(formData.checkIn) : null
+                    }
+                    onChange={(date: Date | null) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        checkIn: date ? date.toLocaleDateString("en-CA") : "",
+                        checkOut: "", // Reset checkout when checkin changes
+                      }))
+                    }
+                    excludeDates={unavailableDates}
+                    minDate={new Date()}
+                    dateFormat="yyyy-MM-dd"
+                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
+                    placeholderText="Select check-in date"
                     required
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent cursor-pointer appearance-none"
                   />
                 </div>
               </div>
@@ -524,14 +583,25 @@ export default function AddBookingModal({
                   Check-out Date
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 pointer-events-none" />
-                  <input
-                    type="date"
-                    name="checkOut"
-                    value={formData.checkOut}
-                    onChange={handleChange}
+                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                  <DatePicker
+                    selected={
+                      formData.checkOut ? new Date(formData.checkOut) : null
+                    }
+                    onChange={(date: Date | null) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        checkOut: date ? date.toLocaleDateString("en-CA") : "",
+                      }))
+                    }
+                    excludeDates={unavailableDates}
+                    minDate={
+                      formData.checkIn ? new Date(formData.checkIn) : new Date()
+                    }
+                    dateFormat="yyyy-MM-dd"
+                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
+                    placeholderText="Select check-out date"
                     required
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent cursor-pointer appearance-none"
                   />
                 </div>
               </div>

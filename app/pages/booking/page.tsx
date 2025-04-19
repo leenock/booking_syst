@@ -138,7 +138,7 @@ function BookingPageContent() {
     if (date) {
       setFormData((prev) => ({
         ...prev,
-        checkIn: date.toISOString().split("T")[0],
+        checkIn: date.toLocaleDateString().split("en-CA")[0],
       }));
     }
   };
@@ -148,7 +148,7 @@ function BookingPageContent() {
     if (date) {
       setFormData((prev) => ({
         ...prev,
-        checkOut: date.toISOString().split("T")[0],
+        checkOut: date.toLocaleDateString().split("en-CA")[0],
       }));
     }
   };
