@@ -283,7 +283,7 @@ export default function BookRoom() {
         // Handle network errors or JSON parsing errors
         setToast({
           message:
-            "Failed to connect to the server. Please check your connection and try again.",
+            "Please check your connection and try again.",
           type: "error",
         });
         setIsLoading(false);
