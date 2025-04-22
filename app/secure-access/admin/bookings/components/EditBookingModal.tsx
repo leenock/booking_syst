@@ -241,7 +241,7 @@ export default function EditBookingModal({
   return (
     <>
       <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-lg w-[90%] max-w-4xl">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">

@@ -394,8 +394,8 @@ const updateBooking = async (req, res) => {
             OR: [
               {
                 AND: [
-                  { checkIn: { lte: new Date(checkOut) } },
-                  { checkOut: { gte: new Date(checkIn) } },
+                  { checkIn: { lt: new Date(checkOut) } },
+                  { checkOut: { gt: new Date(checkIn) } },
                 ],
               },
             ],

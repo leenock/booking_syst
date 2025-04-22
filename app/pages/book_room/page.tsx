@@ -81,8 +81,17 @@ export default function BookRoom() {
       setLastName(user.lastName || "");
       setEmail(user.email || "");
       setPhoneNumber(user.phone || "");
+
+      // Update form data with user details
+      setFormData(prev => ({
+        ...prev,
+        fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        email: user.email || "",
+        phone: user.phone || ""
+      }));
     }
   };
+  
   useEffect(() => {
     loadUserData();
   }, []);
@@ -110,51 +119,61 @@ export default function BookRoom() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
   const today = new Date(); // Get today's date
 
+  // Fetch unavailable dates based on roomType
   useEffect(() => {
-    // Fetch unavailable dates from API
     const fetchUnavailableDates = async () => {
+      setIsLoadingDates(true);
       try {
+        // Reset dates when changing room type
+        setFormData(prev => ({
+          ...prev,
+          checkIn: "",
+          checkOut: ""
+        }));
+        
+        // Call API with roomType as a parameter
         const response = await fetch(
-          "http://localhost:5000/api/booking/booked_dates"
+          `http://localhost:5000/api/booking/booked_dates/${formData.roomType}`
         );
+        
         if (!response.ok) {
           throw new Error("Failed to fetch unavailable dates");
         }
+        
         const data = await response.json();
-
-        // Handle different response formats
-        let parsedDates: Date[] = [];
-
-        if (Array.isArray(data)) {
-          // If data is directly an array of dates
-          parsedDates = data.map((dateString: string) => new Date(dateString));
-        } else if (data && typeof data === "object") {
-          // If data is an object with a dates property or similar
-          const datesArray =
-            data.dates || data.bookedDates || data.unavailableDates || [];
-          if (Array.isArray(datesArray)) {
-            parsedDates = datesArray.map(
-              (dateString: string) => new Date(dateString)
-            );
-          }
+        
+        if (data.success && Array.isArray(data.bookedDates)) {
+          const parsedDates = data.bookedDates.map(
+            (dateString: string) => new Date(dateString)
+          );
+          
+          // Log for debugging
+          console.log("Booked dates for", formData.roomType, ":", parsedDates);
+          
+          setUnavailableDates(parsedDates);
+        } else {
+          console.error("Unexpected API response format:", data);
+          // Set empty array if no dates found
+          setUnavailableDates([]);
         }
-
-        // Log for debugging
-        console.log("API Response:", data);
-        console.log("Parsed Dates:", parsedDates);
-
-        setUnavailableDates(parsedDates);
       } catch (error) {
         console.error("Error fetching unavailable dates:", error);
         // Fallback to default dates in case of error
-        setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+        setUnavailableDates([]);
+        setToast({
+          message: "Could not fetch availability information. Please try again.",
+          type: "error"
+        });
+      } finally {
+        setIsLoadingDates(false);
       }
     };
 
     fetchUnavailableDates();
-  }, []);
+  }, [formData.roomType]); // Re-fetch when roomType changes
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -169,6 +188,8 @@ export default function BookRoom() {
         roomType: value,
         roomPrice: ROOM_PRICES[value as RoomType],
         roomId: "",
+        checkIn: "", // Reset dates when room type changes
+        checkOut: "",
       }));
     } else if (name === "adults" || name === "kids") {
       setFormData((prev) => ({
@@ -463,8 +484,6 @@ export default function BookRoom() {
           type: "success",
         });
 
-        // Show success popup
-
         // Reset form
         setFormData({
           fullName: "",
@@ -591,10 +610,16 @@ export default function BookRoom() {
                       excludeDates={unavailableDates}
                       minDate={new Date()}
                       dateFormat="yyyy-MM-dd"
-                      className="pl-10 w-full sm:w-[540px] md:w-[500px] lg:w-[560px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                      placeholderText="Select check-in date"
+                      className={`pl-10 w-full sm:w-[540px] md:w-[500px] lg:w-[560px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] ${isLoadingDates ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      placeholderText={isLoadingDates ? "Loading available dates..." : "Select check-in date"}
                       required
+                      disabled={isLoadingDates}
                     />
+                    {isLoadingDates && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -623,9 +648,10 @@ export default function BookRoom() {
                           : new Date()
                       }
                       dateFormat="yyyy-MM-dd"
-                      className="pl-10 w-full sm:w-[540px] md:w-[500px] lg:w-[560px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                      placeholderText="Select check-out date"
+                      className={`pl-10 w-full sm:w-[540px] md:w-[500px] lg:w-[560px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] ${isLoadingDates || !formData.checkIn ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      placeholderText={isLoadingDates ? "Loading available dates..." : "Select check-out date"}
                       required
+                      disabled={isLoadingDates || !formData.checkIn}
                     />
                   </div>
                 </div>
@@ -680,11 +706,11 @@ export default function BookRoom() {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      
+                      required
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                       placeholder="John Doe"
                     />
-                      {errors.fullName && (
+                    {errors.fullName && (
                       <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
                     )}
                   </div>
@@ -705,6 +731,9 @@ export default function BookRoom() {
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                       placeholder="johndoe@example.com"
                     />
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -725,6 +754,9 @@ export default function BookRoom() {
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                       placeholder="+254 XXX XXX XXX"
                     />
+                    {errors.phone && (
+                      <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+                    )}
                   </div>
                 </div>
 

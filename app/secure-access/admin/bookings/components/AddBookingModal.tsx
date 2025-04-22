@@ -92,53 +92,63 @@ export default function AddBookingModal({
   });
 
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
   const today = new Date(); // Get today's date
 
-  useEffect(() => {
-    // Fetch unavailable dates from API
-    const fetchUnavailableDates = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:5000/api/booking/booked_dates"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch unavailable dates");
-        }
-        const data = await response.json();
-
-        // Handle different response formats
-        let parsedDates: Date[] = [];
-
-        if (Array.isArray(data)) {
-          // If data is directly an array of dates
-          parsedDates = data.map((dateString: string) => new Date(dateString));
-        } else if (data && typeof data === "object") {
-          // If data is an object with a dates property or similar
-          const datesArray =
-            data.dates || data.bookedDates || data.unavailableDates || [];
-          if (Array.isArray(datesArray)) {
-            parsedDates = datesArray.map(
-              (dateString: string) => new Date(dateString)
-            );
-          }
-        }
-
-        // Log for debugging
-        console.log("API Response:", data);
-        console.log("Parsed Dates:", parsedDates);
-
-        setUnavailableDates(parsedDates);
-      } catch (error) {
-        console.error("Error fetching unavailable dates:", error);
-        // Fallback to default dates in case of error
-        setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+  // Function to fetch unavailable dates based on room type
+  const fetchUnavailableDatesByRoomType = async (roomType: string) => {
+    setIsLoadingDates(true);
+    try {
+      const response = await fetch(
+         `http://localhost:5000/api/booking/booked_dates/${formData.roomType}`
+        
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch unavailable dates");
       }
-    };
+      
+      const data = await response.json();
 
-    fetchUnavailableDates();
-  }, []);
+      // Handle different response formats
+      let parsedDates: Date[] = [];
 
-  // Reset toast state when modal is closed
+      if (Array.isArray(data)) {
+        // If data is directly an array of dates
+        parsedDates = data.map((dateString: string) => new Date(dateString));
+      } else if (data && typeof data === "object") {
+        // If data is an object with a dates property or similar
+        const datesArray =
+          data.dates || data.bookedDates || data.unavailableDates || [];
+        if (Array.isArray(datesArray)) {
+          parsedDates = datesArray.map(
+            (dateString: string) => new Date(dateString)
+          );
+        }
+      }
+
+      // Log for debugging
+      console.log(`API Response for ${roomType}:`, data);
+      console.log(`Parsed Dates for ${roomType}:`, parsedDates);
+
+      setUnavailableDates(parsedDates);
+    } catch (error) {
+      console.error(`Error fetching unavailable dates for ${roomType}:`, error);
+      // Fallback to default dates in case of error
+      setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+    } finally {
+      setIsLoadingDates(false);
+    }
+  };
+
+  // Fetch dates when room type changes
+  useEffect(() => {
+    if (isOpen) {
+      fetchUnavailableDatesByRoomType(formData.roomType);
+    }
+  }, [formData.roomType, isOpen]);
+
+  // Reset form and toast state when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setToast(null);
@@ -159,6 +169,9 @@ export default function AddBookingModal({
         roomType: value,
         roomPrice: ROOM_PRICES[value as RoomType],
         roomId: "",
+        // Reset dates when room type changes
+        checkIn: "",
+        checkOut: "",
       }));
     } else if (name === "adults" || name === "kids") {
       setFormData((prev) => ({
@@ -460,6 +473,15 @@ export default function AddBookingModal({
           }
         });
 
+        // Add click event to button
+        const continueButton = successPopup.querySelector("button");
+        if (continueButton) {
+          continueButton.addEventListener("click", () => {
+            document.body.removeChild(successPopup);
+            onClose();
+          });
+        }
+
         // Auto-close the popup after 3 seconds
         setTimeout(() => {
           if (document.body.contains(successPopup)) {
@@ -578,10 +600,22 @@ export default function AddBookingModal({
                     excludeDates={unavailableDates}
                     minDate={new Date()}
                     dateFormat="yyyy-MM-dd"
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                    placeholderText="Select check-in date"
+                    className={`pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] ${
+                      isLoadingDates ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    placeholderText={
+                      isLoadingDates
+                        ? "Loading available dates..."
+                        : "Select check-in date"
+                    }
                     required
+                    disabled={isLoadingDates}
                   />
+                  {isLoadingDates && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -606,10 +640,26 @@ export default function AddBookingModal({
                       formData.checkIn ? new Date(formData.checkIn) : new Date()
                     }
                     dateFormat="yyyy-MM-dd"
-                    className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)]"
-                    placeholderText="Select check-out date"
+                    className={`pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] ${
+                      isLoadingDates || !formData.checkIn
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
+                    placeholderText={
+                      isLoadingDates
+                        ? "Loading available dates..."
+                        : !formData.checkIn
+                        ? "First select check-in date"
+                        : "Select check-out date"
+                    }
                     required
+                    disabled={isLoadingDates || !formData.checkIn}
                   />
+                  {isLoadingDates && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-500"></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -756,7 +806,7 @@ export default function AddBookingModal({
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isLoadingDates}
                 className="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Creating..." : "Create Booking"}
