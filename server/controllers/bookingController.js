@@ -600,15 +600,16 @@ const getBookingsByVisitorEmail = async (req, res) => {
   }
 };
 
-// Get booked dates
-// Get all booked dates across all rooms
+// Get booked dates and Get all booked dates for a specific room type
 const getBookedDates = async (req, res) => {
+  const { roomType } = req.params; // Get roomType from the URL parameter
   try {
     const bookings = await prisma.booking.findMany({
       where: {
         status: {
           in: ["PENDING", "CONFIRMED"], // Only active bookings
         },
+        roomType: roomType, // Filter by roomType
       },
       select: {
         checkIn: true,
@@ -640,6 +641,7 @@ const getBookedDates = async (req, res) => {
     });
   }
 };
+
 
 
 module.exports = {
