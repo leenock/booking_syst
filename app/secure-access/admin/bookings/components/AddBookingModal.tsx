@@ -19,7 +19,6 @@ import Toast from "@/app/components/ui/Toast";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-
 interface AddBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -195,14 +194,14 @@ export default function AddBookingModal({
         type: "error",
       });
       return false;
-    } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phone)) {
+    } else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
       setToast({
         message: "Please enter a valid phone number (e.g. +254712345678)",
         type: "error",
       });
       return false;
     }
-    
+
     if (!formData.checkIn) {
       setToast({
         message: "Check-in date is required",

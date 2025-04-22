@@ -204,6 +204,13 @@ export default function BookRoom() {
       });
       return false;
     }
+    else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
+      setToast({
+        message: "Please enter a valid phone number (e.g. +254712345678)",
+        type: "error",
+      });
+      return false;
+    }
     if (!formData.checkIn) {
       setToast({
         message: "Check-in date is required",

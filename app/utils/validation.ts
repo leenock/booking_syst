@@ -17,7 +17,10 @@ export interface FormErrors {
   confirmPassword?: string;
 }
 
-export const validateVisitorForm = (formData: VisitorFormData, isEdit: boolean = false): FormErrors => {
+export const validateVisitorForm = (
+  formData: VisitorFormData,
+  isEdit: boolean = false
+): FormErrors => {
   const errors: FormErrors = {};
 
   // First Name validation
@@ -40,8 +43,8 @@ export const validateVisitorForm = (formData: VisitorFormData, isEdit: boolean =
   // Phone validation
   if (!formData.phone?.trim()) {
     errors.phone = "Phone number is required";
-  } else if (!/^\+?[1-9]\d{1,14}$/.test(formData.phone)) {
-    errors.phone = "Please enter a valid phone number";
+  } else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
+    errors.phone = "Please enter a valid phone number, (e.g. +254712345678)";
   }
 
   // Password validation (only for AddVisitorModal)
@@ -64,4 +67,4 @@ export const validateVisitorForm = (formData: VisitorFormData, isEdit: boolean =
 
 export const hasFormErrors = (errors: FormErrors): boolean => {
   return Object.keys(errors).length > 0;
-}; 
+};

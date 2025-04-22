@@ -1,4 +1,4 @@
-interface BookingFormData {
+export interface BookingFormData {
   fullName: string;
   email: string;
   phone: string;
@@ -30,9 +30,9 @@ export const validateBookingForm = (
   const errors: FormErrors = {};
   // First Name validation
   if (!formData.fullName?.trim()) {
-    errors.fullName = "Full Name is required";
+    errors.fullName = "Full Name is required right now";
   }
-  // Email validation 
+  // Email validation
   if (!formData.email?.trim()) {
     errors.email = "Email is required";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -42,9 +42,10 @@ export const validateBookingForm = (
   if (!formData.phone?.trim()) {
     errors.phone = "Phone number is required";
   } else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
-    errors.phone = "Please enter a valid phone number in international format (e.g., +254712345678)";
+    errors.phone =
+      "Please enter a valid phone number in international format (e.g., +254712345678)";
   }
-  
+
   // Special Request validation
   if (!formData.specialRequest?.trim()) {
     errors.specialRequest = "Special request is required";
@@ -62,9 +63,9 @@ export const validateBookingForm = (
     errors.checkOut = "Check-out date is required";
   }
   // Payment Method validation
-  if (!formData.paymentMethod?.trim()) {  
-      errors.paymentMethod = "Payment method is required";
-    }
+  if (!formData.paymentMethod?.trim()) {
+    errors.paymentMethod = "Payment method is required";
+  }
   return errors;
 };
 

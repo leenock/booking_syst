@@ -19,6 +19,11 @@ import Toast from "@/app/components/ui/Toast";
 import UserAuthService from "@/app/services/user_auth";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import {
+  validateBookingForm,
+  hasFormErrors,
+  FormErrors,
+} from "@/app/utils/booking_validation";
 
 type RoomType = "STANDARD" | "DELUXE" | "SUITE";
 
@@ -103,7 +108,7 @@ export default function BookRoom() {
     checkOut: "",
     paymentMethod: "CASH",
   });
-
+  const [errors, setErrors] = useState<FormErrors>({});
   const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const today = new Date(); // Get today's date
 
@@ -199,6 +204,12 @@ export default function BookRoom() {
         type: "error",
       });
       return false;
+    } else if (!/^\+[1-9]\d{1,14}$/.test(formData.phone)) {
+      setToast({
+        message: "Please enter a valid phone number (e.g. +254712345678)",
+        type: "error",
+      });
+      return false;
     }
     if (!formData.checkIn) {
       setToast({
@@ -259,6 +270,16 @@ export default function BookRoom() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const validationErrors = validateBookingForm(formData, false); // Pass false for isEdit
+    setErrors(validationErrors);
+    if (hasFormErrors(validationErrors)) {
+      setToast({
+        message: "Please fix the errors before submitting",
+        type: "error",
+      });
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -282,8 +303,7 @@ export default function BookRoom() {
       } catch (fetchError) {
         // Handle network errors or JSON parsing errors
         setToast({
-          message:
-            "Please check your connection and try again.",
+          message: "Please check your connection and try again.",
           type: "error",
         });
         setIsLoading(false);
@@ -660,10 +680,13 @@ export default function BookRoom() {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      required
+                      
                       className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                       placeholder="John Doe"
                     />
+                      {errors.fullName && (
+                      <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
+                    )}
                   </div>
                 </div>
 
