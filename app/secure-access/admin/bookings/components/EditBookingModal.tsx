@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle } from "lucide-react";
+import { X, CheckCircle, Calendar } from "lucide-react";
 import AuthService from "@/app/services/auth";
 import axios from "axios";
+import DatePicker from "react-datepicker";
 import { toast } from "react-toastify";
 
 interface EditBookingModalProps {
@@ -41,6 +42,12 @@ export default function EditBookingModal({
   onSuccess,
   booking,
 }: EditBookingModalProps) {
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +93,60 @@ export default function EditBookingModal({
       setError(null);
     }
   }, [isOpen]);
+
+  // Fetch unavailable dates based on roomType
+  useEffect(() => {
+    const fetchUnavailableDates = async () => {
+      setIsLoadingDates(true);
+      try {
+        // Reset dates when changing room type
+        setFormData((prev) => ({
+          ...prev,
+          checkIn: "",
+          checkOut: "",
+        }));
+
+        // Call API with roomType as a parameter
+        const response = await fetch(
+          `http://localhost:5000/api/booking/booked_dates/${formData.roomType}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch unavailable dates");
+        }
+
+        const data = await response.json();
+
+        if (data.success && Array.isArray(data.bookedDates)) {
+          const parsedDates = data.bookedDates.map(
+            (dateString: string) => new Date(dateString)
+          );
+
+          // Log for debugging
+          console.log("Booked dates for", formData.roomType, ":", parsedDates);
+
+          setUnavailableDates(parsedDates);
+        } else {
+          console.error("Unexpected API response format:", data);
+          // Set empty array if no dates found
+          setUnavailableDates([]);
+        }
+      } catch (error) {
+        console.error("Error fetching unavailable dates:", error);
+        // Fallback to default dates in case of error
+        setUnavailableDates([]);
+        setToast({
+          message:
+            "Could not fetch availability information. Please try again.",
+          type: "error",
+        });
+      } finally {
+        setIsLoadingDates(false);
+      }
+    };
+
+    fetchUnavailableDates();
+  }, [formData.roomType]); // Re-fetch when roomType changes
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -229,8 +290,10 @@ export default function EditBookingModal({
         errorMessage = `Request error: ${err.message}`;
       }
 
-      toast.error(errorMessage);
-      setError(errorMessage);
+      setToast({
+        message: "An unexpected error occurred. Please try again.",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -241,7 +304,7 @@ export default function EditBookingModal({
   return (
     <>
       <div className="fixed inset-0 bg-white/30 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -324,9 +387,7 @@ export default function EditBookingModal({
                       value={formData.roomType}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
+                      className="pl-10 w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent"
                     >
                       <option value="STANDARD">
                         Standard Room - Ksh 8,000
@@ -345,32 +406,85 @@ export default function EditBookingModal({
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Check-in Date
                     </label>
-                    <input
-                      type="date"
-                      name="checkIn"
-                      value={formData.checkIn}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                    />
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                      <DatePicker
+                        selected={
+                          formData.checkIn ? new Date(formData.checkIn) : null
+                        }
+                        onChange={(date: Date | null) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            checkIn: date
+                              ? date.toLocaleDateString("en-CA")
+                              : "",
+                            checkOut: "", // Reset checkout when checkin changes
+                          }))
+                        }
+                        excludeDates={unavailableDates}
+                        minDate={new Date()}
+                        dateFormat="yyyy-MM-dd"
+                        className={`pl-10 w-full sm:w-[350px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] 
+                          ${
+                            isLoadingDates
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                        placeholderText={
+                          isLoadingDates
+                            ? "Loading available dates..."
+                            : "Select check-in date"
+                        }
+                        required
+                        disabled={isLoadingDates}
+                      />
+                      {isLoadingDates && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Check-out Date
                     </label>
-                    <input
-                      type="date"
-                      name="checkOut"
-                      value={formData.checkOut}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 
-                               transition-all duration-200"
-                    />
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-purple-500 z-10" />
+                      <DatePicker
+                        selected={
+                          formData.checkOut ? new Date(formData.checkOut) : null
+                        }
+                        onChange={(date: Date | null) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            checkOut: date
+                              ? date.toLocaleDateString("en-CA")
+                              : "",
+                          }))
+                        }
+                        excludeDates={unavailableDates}
+                        minDate={
+                          formData.checkIn
+                            ? new Date(formData.checkIn)
+                            : new Date()
+                        }
+                        dateFormat="yyyy-MM-dd"
+                        className={`pl-10 w-full sm:w-[350px] px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-400 focus:border-transparent bg-white/90 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.1)] backdrop-blur-sm transition-all duration-300 group-hover:border-purple-300 hover:bg-white hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.12)] ${
+                          isLoadingDates || !formData.checkIn
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
+                        placeholderText={
+                          isLoadingDates
+                            ? "Loading available dates..."
+                            : "Select check-out date"
+                        }
+                        required
+                        disabled={isLoadingDates || !formData.checkIn}
+                      />
+                    </div>
                   </div>
 
                   <div className="mb-4">
@@ -459,7 +573,7 @@ export default function EditBookingModal({
                            focus:outline-none focus:ring-2 focus:ring-blue-500/20 
                            transition-all duration-200"
                 >
-                  <option >Select payment method</option>
+                  <option>Select payment method</option>
                   <option value="CASH">Cash</option>
                   <option value="MPESA">M-Pesa</option>
                   <option value="BANK_TRANSFER">Bank Transfer</option>
