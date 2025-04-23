@@ -50,7 +50,7 @@ const MENU_ITEMS: MenuItem[] = [
     icon: BarChart2,
     href: "/secure-access/admin/analytics",
   },
-  { name: "Settings", icon: Settings, href: "/secure-access/admin/settings" },
+ // { name: "Settings", icon: Settings, href: "/secure-access/admin/settings" },
 ];
 
 const RESIZE_DEBOUNCE_MS = 100;

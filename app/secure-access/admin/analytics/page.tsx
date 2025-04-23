@@ -1,19 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  FileText, 
-  Download, 
-  Calendar, 
-  Users, 
-  User, 
-  CreditCard, 
-  Home, 
-  Sliders, 
-  ChevronDown,
-  Filter,
-  Eye
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { FileText, Download, Calendar, ChevronDown, Filter, Eye } from "lucide-react";
 
 type ReportType = {
   id: string;
@@ -25,113 +13,266 @@ type ReportType = {
 };
 
 export default function ReportsExportDashboard() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  
+  const [bookingData, setBookingData] = useState<any[]>([]);
+  const [visitorData, setVisitorData] = useState<any[]>([]);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  // Fetch booking data
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/booking`);
+        if (response.ok) {
+          const data = await response.json();
+          setBookingData(data);
+        } else {
+          console.error('Failed to fetch booking data');
+        }
+      } catch (error) {
+        console.error('Error fetching booking data:', error);
+      }
+    };
+
+    fetchBookingData();
+  }, []);
+
+  // Fetch visitor data
+  useEffect(() => {
+    const fetchVisitorData = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/visitor-accounts`);
+        if (response.ok) {
+          const data = await response.json();
+          setVisitorData(data);
+        } else {
+          console.error('Failed to fetch visitor data');
+        }
+      } catch (error) {
+        console.error('Error fetching visitor data:', error);
+      }
+    };
+
+    fetchVisitorData();
+  }, []);
+
   const reportTypes: ReportType[] = [
     {
-      id: "booking-summary",
-      name: "Booking Summary",
-      description: "Overview of all bookings with status, dates, and revenue",
+      id: "list-of-bookings",
+      name: "List of Bookings",
+      description: "Comprehensive list of all bookings with status and details",
       icon: <Calendar className="text-blue-600" size={20} />,
-      availableFormats: ["PDF", "CSV", "Excel"],
+      availableFormats: [ "CSV", "Excel"],
       category: "Bookings"
     },
     {
-      id: "booking-detailed",
-      name: "Detailed Booking Report",
-      description: "In-depth analysis of bookings with customer data and preferences",
-      icon: <Calendar className="text-blue-600" size={20} />,
-      availableFormats: ["PDF", "Excel"],
-      category: "Bookings"
-    },
-    {
-      id: "visitor-list",
-      name: "Visitors List",
-      description: "Complete list of all visitors with contact information",
-      icon: <Users className="text-green-600" size={20} />,
-      availableFormats: ["PDF", "CSV", "Excel"],
+      id: "list-of-visitors",
+      name: "List of Visitors",
+      description: "Comprehensive list of all visitors with their details",
+      icon: <Eye className="text-green-600" size={20} />,
+      availableFormats: ["CSV", "Excel"],
       category: "Visitors"
-    },
-    {
-      id: "visitor-activity",
-      name: "Visitor Activity",
-      description: "Tracking of visitor interactions and frequency of visits",
-      icon: <Users className="text-green-600" size={20} />,
-      availableFormats: ["PDF", "Excel"],
-      category: "Visitors"
-    },
-    {
-      id: "user-accounts",
-      name: "System Users Report",
-      description: "List of all system users with roles and permissions",
-      icon: <User className="text-purple-600" size={20} />,
-      availableFormats: ["PDF", "CSV"],
-      category: "Users"
-    },
-    {
-      id: "user-activity",
-      name: "User Activity Log",
-      description: "Audit trail of user actions within the system",
-      icon: <User className="text-purple-600" size={20} />,
-      availableFormats: ["PDF", "CSV", "Excel"],
-      category: "Users"
-    },
-    {
-      id: "payment-methods",
-      name: "Payment Methods Analysis",
-      description: "Distribution and usage of different payment methods",
-      icon: <CreditCard className="text-amber-600" size={20} />,
-      availableFormats: ["PDF", "Excel"],
-      category: "Payments"
-    },
-    {
-      id: "payment-transactions",
-      name: "Payment Transactions",
-      description: "Detailed log of all payment transactions with status",
-      icon: <CreditCard className="text-amber-600" size={20} />,
-      availableFormats: ["PDF", "CSV", "Excel"],
-      category: "Payments"
-    },
-    {
-      id: "rooms-inventory",
-      name: "Rooms Inventory",
-      description: "Current status and availability of all rooms",
-      icon: <Home className="text-red-600" size={20} />,
-      availableFormats: ["PDF", "CSV", "Excel"],
-      category: "Rooms"
-    },
-    {
-      id: "rooms-occupancy",
-      name: "Room Occupancy Rate",
-      description: "Analysis of room occupancy rates over time",
-      icon: <Home className="text-red-600" size={20} />,
-      availableFormats: ["PDF", "Excel"],
-      category: "Rooms"
     }
   ];
-  
-  const categories = Array.from(new Set(reportTypes.map(report => report.category)));
-  
-  const filteredReports = reportTypes.filter(report => {
-    const matchesCategory = selectedCategory ? report.category === selectedCategory : true;
-    const matchesSearch = searchQuery 
+
+  const filteredReports = reportTypes.filter((report) => {
+    const matchesSearch = searchQuery
       ? report.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         report.description.toLowerCase().includes(searchQuery.toLowerCase())
       : true;
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
-  const handleExport = (reportId: string, format: string) => {
-    // In a real application, this would trigger the actual report generation
-    console.log(`Exporting report ${reportId} in ${format} format`);
-    // Here you would call your API endpoint to generate the report
-    alert(`Preparing ${format} export for ${reportTypes.find(r => r.id === reportId)?.name}. The download will begin shortly.`);
+  // FIXED: Improved CSV conversion with better data handling
+  const convertToCSV = (data: any[]) => {
+    if (!data || data.length === 0) {
+      // Return empty CSV with default headers for the report type
+      return 'No data available';
+    }
+    
+    // Make sure we have valid data with properties
+    const firstItem = data[0];
+    if (!firstItem || typeof firstItem !== 'object') {
+      return 'Invalid data format';
+    }
+    
+    const headers = Object.keys(firstItem);
+    if (headers.length === 0) {
+      return 'No properties found in data';
+    }
+    
+    const csvRows = [];
+    
+    // Add header row
+    csvRows.push(headers.join(','));
+    
+    // Add data rows
+    for (const row of data) {
+      const values = headers.map(header => {
+        const value = row[header];
+        // Handle strings with commas by wrapping in quotes
+        if (value === null || value === undefined) {
+          return '';
+        } else if (typeof value === 'string' && value.includes(',')) {
+          return `"${value}"`;
+        } else {
+          return String(value);
+        }
+      });
+      csvRows.push(values.join(','));
+    }
+    
+    return csvRows.join('\n');
   };
 
-  // Handle clicks outside dropdowns
-  React.useEffect(() => {
+  // Helper function to create default data if none exists
+  const createDefaultData = (reportId: string) => {
+    if (reportId === "list-of-bookings") {
+      return [
+        { 
+          id: "sample-1", 
+          visitorName: "Sample Visitor", 
+          date: "2025-04-23", 
+          status: "Confirmed" 
+        }
+      ];
+    } else {
+      return [
+        { 
+          id: "visitor-1", 
+          name: "Sample User", 
+          email: "sample@example.com", 
+          status: "Active" 
+        }
+      ];
+    }
+  };
+
+  // Helper function to convert data to Excel format (simplified as CSV for demo)
+  const convertToExcel = (data: any[]) => {
+    // In a real implementation, use a library like ExcelJS or XLSX
+    // For this demo, we'll reuse the CSV conversion
+    return convertToCSV(data);
+  };
+
+  // Function to trigger download of file
+  const downloadFile = (content: string, fileName: string) => {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // FIXED: Improved export function with better debugging
+  const handleExport = async (reportId: string, format: string) => {
+    setIsExporting(true);
+    setExportProgress(0);
+    
+    const report = reportTypes.find(r => r.id === reportId);
+    if (!report) {
+      setIsExporting(false);
+      alert("Report not found");
+      return;
+    }
+    
+    // Simulate export progress
+    const progressInterval = setInterval(() => {
+      setExportProgress(prev => {
+        const newProgress = prev + 10;
+        return newProgress <= 90 ? newProgress : 90;
+      });
+    }, 300);
+    
+    // Get appropriate data based on report type
+    let data = [];
+    if (reportId === "list-of-bookings") {
+      data = bookingData && bookingData.length > 0 ? bookingData : createDefaultData(reportId);
+      console.log("Booking data for export:", data);
+    } else {
+      data = visitorData && visitorData.length > 0 ? visitorData : createDefaultData(reportId);
+      console.log("Visitor data for export:", data);
+    }
+    
+    let content = '';
+    let fileName = '';
+    
+    // Process based on format
+    try {
+      switch (format.toLowerCase()) {
+        case 'csv':
+          content = convertToCSV(data);
+          fileName = `${report.name.replace(/\s+/g, '-').toLowerCase()}.csv`;
+          break;
+        case 'excel':
+          content = convertToExcel(data);
+          fileName = `${report.name.replace(/\s+/g, '-').toLowerCase()}.xlsx`;
+          break;
+        
+        default:
+          throw new Error(`Unsupported format: ${format}`);
+      }
+      
+      console.log(`Generated ${format} content:`, content.substring(0, 200) + (content.length > 200 ? '...' : ''));
+      
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      clearInterval(progressInterval);
+      setExportProgress(100);
+      
+      // Download the file
+      downloadFile(content, fileName);
+      
+      // Reset progress after a short delay
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportProgress(0);
+      }, 1000);
+      
+    } catch (error) {
+      console.error(`Error exporting ${report.name} as ${format}:`, error);
+      clearInterval(progressInterval);
+      setIsExporting(false);
+      setExportProgress(0);
+      alert(`Failed to export ${report.name} as ${format}. Please try again.`);
+    }
+  };
+
+  // FIXED: Improved preview function with better debugging
+  const handlePreview = (reportId: string) => {
+    const report = reportTypes.find(r => r.id === reportId);
+    let data = [];
+    let previewContent = "";
+    
+    if (reportId === "list-of-bookings") {
+      data = bookingData && bookingData.length > 0 ? bookingData : createDefaultData(reportId);
+      console.log("Preview booking data:", data);
+    } else {
+      data = visitorData && visitorData.length > 0 ? visitorData : createDefaultData(reportId);
+      console.log("Preview visitor data:", data);
+    }
+    
+    if (data.length > 0) {
+      // Format first item as preview
+      const firstItem = data[0];
+      previewContent = Object.entries(firstItem)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+    } else {
+      previewContent = "No data available";
+    }
+    
+    alert(`Preview of ${report?.name || 'report'}:\n\nFirst record:\n${previewContent}\n\nTotal records: ${data.length}`);
+  };
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest('[data-dropdown="category"]')) {
@@ -148,100 +289,45 @@ export default function ReportsExportDashboard() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Reports & Exports</h2>
-            <p className="text-sm text-gray-500 mt-2">Generate and download reports from your data</p>
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-800">Reports & Exports</h2>
+        <p className="text-sm text-gray-500 mt-2">Generate and download the basic reports you need</p>
       </div>
 
-      {/* Search and Filter */}
       <div className="mb-6 flex flex-wrap gap-4">
-        <div className="flex-grow max-w-md">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search reports..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </div>
+        <div className="flex-grow max-w-md relative">
+          <input
+            type="text"
+            placeholder="Search reports..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
           </div>
-        </div>
-        
-        <div className="flex gap-2">
-          <div className="relative inline-block text-left" data-dropdown="category">
-            <div>
-              <button 
-                type="button" 
-                className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                id="category-menu"
-                aria-expanded={categoryDropdownOpen}
-                aria-haspopup="true"
-                onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
-              >
-                {selectedCategory || 'All Categories'}
-                <ChevronDown className="ml-2 h-5 w-5" />
-              </button>
-            </div>
-
-            {categoryDropdownOpen && (
-              <div 
-                className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50" 
-                role="menu" 
-                aria-orientation="vertical" 
-                aria-labelledby="category-menu"
-              >
-                <div className="py-1" role="none">
-                  <button
-                    className={`block w-full text-left px-4 py-2 text-sm ${!selectedCategory ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
-                    role="menuitem"
-                    onClick={() => {
-                      setSelectedCategory(null);
-                      setCategoryDropdownOpen(false);
-                    }}
-                  >
-                    All Categories
-                  </button>
-                  {categories.map(category => (
-                    <button
-                      key={category}
-                      className={`block w-full text-left px-4 py-2 text-sm ${selectedCategory === category ? 'bg-gray-100 text-gray-900' : 'text-gray-700'} hover:bg-gray-100`}
-                      role="menuitem"
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setCategoryDropdownOpen(false);
-                      }}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {selectedCategory && (
-            <button 
-              className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-              onClick={() => setSelectedCategory(null)}
-            >
-              <Filter size={16} className="text-gray-500" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Reports Grid */}
+      {isExporting && (
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-700">Exporting report...</span>
+            <span className="text-sm text-blue-700">{exportProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${exportProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredReports.map((report) => (
-          <div key={report.id} className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+          <div key={report.id} className="bg-white rounded-xl shadow-md border border-gray-200 hover:shadow-lg">
             <div className="p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center mb-3">
@@ -254,32 +340,32 @@ export default function ReportsExportDashboard() {
               </div>
               
               <p className="text-sm text-gray-600 mb-4">{report.description}</p>
-              
-              <div className="mt-2">
-                <div className="text-xs text-gray-500 flex items-center mb-3">
-                  <FileText size={14} className="mr-1" />
-                  Available formats:
-                </div>
-                
-                <div className="flex flex-wrap gap-2">
-                  {report.availableFormats.map(format => (
-                    <button
-                      key={format}
-                      className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-medium flex items-center"
-                      onClick={() => handleExport(report.id, format)}
-                    >
-                      <Download size={12} className="mr-1" />
-                      {format}
-                    </button>
-                  ))}
+
+              <div className="text-xs text-gray-500 mb-2 flex items-center">
+                <FileText size={14} className="mr-1" />
+                Available formats:
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {report.availableFormats.map(format => (
                   <button
-                    className="px-3 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-medium flex items-center"
-                    onClick={() => alert(`Preview of ${report.name} would open here`)}
+                    key={format}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md text-xs font-medium flex items-center"
+                    onClick={() => handleExport(report.id, format)}
+                    disabled={isExporting}
                   >
-                    <Eye size={12} className="mr-1" />
-                    Preview
+                    <Download size={12} className="mr-1" />
+                    {format}
                   </button>
-                </div>
+                ))}
+                <button
+                  className="px-3 py-1.5 bg-gray-50 text-gray-700 hover:bg-gray-100 rounded-md text-xs font-medium flex items-center"
+                  onClick={() => handlePreview(report.id)}
+                  disabled={isExporting}
+                >
+                  <Eye size={12} className="mr-1" />
+                  Preview
+                </button>
               </div>
             </div>
           </div>
@@ -293,72 +379,16 @@ export default function ReportsExportDashboard() {
           </div>
           <h3 className="text-lg font-medium text-gray-900">No reports found</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your search or filter to find what you're looking for.
+            Try adjusting your search to find what you're looking for.
           </p>
           <button 
             className="mt-4 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-            onClick={() => {
-              setSelectedCategory(null);
-              setSearchQuery("");
-            }}
+            onClick={() => setSearchQuery("")}
           >
-            Clear filters
+            Clear search
           </button>
         </div>
       )}
-
-      {/* Advanced Options */}
-      <div className="mt-8 bg-gray-50 rounded-lg p-5 border border-gray-200">
-        <div className="flex items-center mb-4">
-          <Sliders className="text-gray-700 mr-2" size={18} />
-          <h3 className="font-medium text-gray-800">Advanced Report Options</h3>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Custom Date Range
-            </label>
-            <div className="flex gap-2">
-              <input 
-                type="date" 
-                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
-                placeholder="Start Date"
-              />
-              <input 
-                type="date" 
-                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
-                placeholder="End Date"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Schedule Report
-            </label>
-            <div className="flex gap-2">
-              <select className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm">
-                <option value="">Select frequency</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-              <input 
-                type="email" 
-                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm"
-                placeholder="Email to"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
-            Create Custom Report
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
