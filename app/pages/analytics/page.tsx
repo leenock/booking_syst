@@ -116,6 +116,7 @@ export default function BookingAnalytics() {
       booking.status === "CHECKED_OUT" ||
       new Date(booking.checkOut) < new Date()
   );
+  // Helper function to calculate stay duration
   const calculateStayDuration = (checkIn: string, checkOut: string) => {
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
@@ -221,23 +222,26 @@ export default function BookingAnalytics() {
 
   // Handle export
   const exportBookings = () => {
-    // Create CSV content
     const headers =
-      "ID,Name,Email,Phone,adults,Kids,Room Type,Room Number,Check In,Check Out,Price,Status\n";
+      "ID,Name,Email,Phone,Adults,Kids,Room Type,Room Number,Check In,Check Out,Total Amount Spent,Status\n";
+
     const rows = getFilteredBookings()
-      .map(
-        (b) =>
-          `${b.id},"${b.fullName}","${b.email}","${b.phone}","${b.adults}","${b.kids}","${b.roomType}",` +
-          `"${b.room?.roomNumber || "N/A"}","${b.checkIn}","${b.checkOut}",${
-            b.roomPrice
-          },"${b.status}"`
-      )
+      .map((b) => {
+        const stayDuration = calculateStayDuration(b.checkIn, b.checkOut);
+        const totalAmountSpent = b.roomPrice * stayDuration;
+
+        return (
+          `${b.id},"${b.fullName}","${b.email}","${b.phone}",${b.adults},${b.kids},"${b.roomType}",` +
+          `"${b.room?.roomNumber || "N/A"}","${b.checkIn}","${
+            b.checkOut
+          }",${totalAmountSpent},"${b.status}"`
+        );
+      })
       .join("\n");
 
     const csvContent = "data:text/csv;charset=utf-8," + headers + rows;
     const encodedUri = encodeURI(csvContent);
 
-    // Create download link and trigger download
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute(
@@ -296,161 +300,106 @@ export default function BookingAnalytics() {
             </div>
           ) : (
             <>
-              {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Bookings
-                      </p>
-                      <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                        {getFilteredBookings().length}
-                      </h3>
-                    </div>
-                    <div className="p-3 bg-purple-100 rounded-full">
-                      <CalendarDays className="w-6 h-6 text-purple-600" />
-                    </div>
-                  </div>
+                <div className="bg-white shadow-md rounded-lg p-4">
+                  <h2 className="text-gray-600 text-sm mb-1">Total Spent</h2>
+                  <p className="text-2xl font-bold text-purple-700">
+                    KES {totalSpent.toLocaleString()}
+                  </p>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Spent
-                      </p>
-                      <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                        Ksh{totalSpent.toFixed(2)}
-                      </h3>
-                    </div>
-                    <div className="p-3 bg-green-100 rounded-full">
-                      <CreditCard className="w-6 h-6 text-green-600" />
-                    </div>
-                  </div>
+                <div className="bg-white shadow-md rounded-lg p-4">
+                  <h2 className="text-gray-600 text-sm mb-1">
+                    Average Price/Night
+                  </h2>
+                  <p className="text-2xl font-bold text-purple-700">
+                    KES {avgPrice}
+                  </p>
                 </div>
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">
-                        Average Price
-                      </p>
-                      <h3 className="text-2xl font-bold text-gray-900 mt-1">
-                        Ksh{avgPrice}
-                      </h3>
-                    </div>
-                    <div className="p-3 bg-blue-100 rounded-full">
-                      <Users className="w-6 h-6 text-blue-600" />
-                    </div>
-                  </div>
+                <div className="bg-white shadow-md rounded-lg p-4">
+                  <h2 className="text-gray-600 text-sm mb-1">Total Bookings</h2>
+                  <p className="text-2xl font-bold text-purple-700">
+                    {getFilteredBookings().length}
+                  </p>
                 </div>
               </div>
 
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                  <div className="flex items-center gap-2 mb-4">
-                    <BarChartIcon className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-semibold text-gray-800">
-                      Monthly Spending
-                    </h3>
-                  </div>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={getMonthlyBookings()}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip
-                          formatter={(value) => [`Ksh ${value}`, "Amount"]}
-                        />
-                        <Legend />
-                        <Bar dataKey="amount" fill="#8884d8" name="Spending" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                  <div className="flex items-center gap-2 mb-4">
-                    <PieChartIcon className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-semibold text-gray-800">
-                      Bookings by Room Type
-                    </h3>
-                  </div>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={roomTypeData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                          label={({ name, percent }) =>
-                            `${name}: ${(percent * 100).toFixed(0)}%`
-                          }
-                        >
-                          {roomTypeData.map((entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value, name, props) => [
-                            `${value} bookings`,
-                            props.payload.name,
-                          ]}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-              </div>
-
-              {/* Booking Status */}
-              <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <PieChartIcon className="w-5 h-5 text-purple-600" />
-                  <h3 className="font-semibold text-gray-800">
-                    Booking Status Distribution
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-4 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                    Bookings by Status
                   </h3>
-                </div>
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
                         data={statusData}
+                        dataKey="value"
+                        nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name}: ${(percent * 100).toFixed(0)}%`
-                        }
+                        outerRadius={100}
+                        label
                       >
-                        {statusData.map((entry, index) => (
+                        {statusData.map((_, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}
                           />
                         ))}
                       </Pie>
-                      <Tooltip
-                        formatter={(value, name, props) => [
-                          `${value} bookings`,
-                          props.payload.name,
-                        ]}
-                      />
+                      <Tooltip />
+                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
+
+                <div className="bg-white p-4 rounded-lg shadow-md">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                    Bookings by Room Type
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={roomTypeData}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label
+                      >
+                        {roomTypeData.map((_, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg shadow-md mt-8">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700">
+                  Monthly Spending
+                </h3>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={getMonthlyBookings()}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip
+                      formatter={(value) => [
+                        `Ksh ${value.toLocaleString()}`,
+                        "Amount",
+                      ]}
+                    />
+                    <Legend />
+                    <Bar dataKey="amount" fill="#8884d8" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </>
           )}
