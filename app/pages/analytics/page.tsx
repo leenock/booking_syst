@@ -221,9 +221,10 @@ export default function BookingAnalytics() {
   };
 
   // Handle export
+  // Handle export
   const exportBookings = () => {
     const headers =
-      "ID,Name,Email,Phone,Adults,Kids,Room Type,Room Number,Check In,Check Out,Total Amount Spent,Status\n";
+      "ID,Name,Email,Phone,Adults,Kids,Room Type,Room Number,Check In,Check Out,Nights Spent,Total Amount Spent,Status\n";
 
     const rows = getFilteredBookings()
       .map((b) => {
@@ -234,7 +235,7 @@ export default function BookingAnalytics() {
           `${b.id},"${b.fullName}","${b.email}","${b.phone}",${b.adults},${b.kids},"${b.roomType}",` +
           `"${b.room?.roomNumber || "N/A"}","${b.checkIn}","${
             b.checkOut
-          }",${totalAmountSpent},"${b.status}"`
+          }",${stayDuration},${totalAmountSpent},"${b.status}"`
         );
       })
       .join("\n");
