@@ -2,35 +2,40 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-
-  ChevronDownIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import toast from "react-hot-toast";
 
+type RoomType = "STANDARD" | "DELUXE" | "SUITE";
+
+
 export default function Hero() {
-  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const router = useRouter();
   const today = new Date();
 
-  const [formData, setFormData] = useState({
-    checkIn: null as Date | null,
-    checkOut: null as Date | null,
-    roomType: "any",
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
+  const [formData, setFormData] = useState<{
+    checkIn: Date | null;
+    checkOut: Date | null;
+    roomType: RoomType;
+  }>({
+    checkIn: null,
+    checkOut: null,
+    roomType: "STANDARD",
   });
 
   useEffect(() => {
     const fetchUnavailableDates = async () => {
+      setIsLoadingDates(true);
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/booking/booked_dates"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch unavailable dates");
-        }
+        const endpoint = `http://localhost:5000/api/booking/booked_dates/${formData.roomType}`;
+        const response = await fetch(endpoint);
+
+        if (!response.ok) throw new Error("Failed to fetch unavailable dates");
+
         const data = await response.json();
         let parsedDates: Date[] = [];
 
@@ -50,17 +55,25 @@ export default function Hero() {
       } catch (error) {
         console.error("Error fetching unavailable dates:", error);
         setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+      } finally {
+        setIsLoadingDates(false);
       }
     };
 
     fetchUnavailableDates();
-  }, []);
+  }, [formData.roomType]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "roomType") {
+      setFormData((prev) => ({
+        ...prev,
+        roomType: value.toUpperCase() as RoomType,
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -135,57 +148,22 @@ export default function Hero() {
           </div>
 
           <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl border border-white/20 shadow-xl animate-fade-in-up animation-delay-150">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              Book Your Stays
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                Book Your Stays
+              </h2>
+              {isLoadingDates && (
+                <div className="text-amber-400 text-sm flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Loading
+                </div>
+              )}
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Check-in
-                  </label>
-                  <DatePicker
-                    selected={formData.checkIn}
-                    onChange={(date) => {
-                      setFormData({
-                        ...formData,
-                        checkIn: date,
-                        checkOut:
-                          formData.checkOut && date && formData.checkOut < date
-                            ? null
-                            : formData.checkOut,
-                      });
-                    }}
-                    excludeDates={unavailableDates}
-                    minDate={today}
-                    placeholderText="Select check-in date"
-                    selectsStart
-                    startDate={formData.checkIn}
-                    endDate={formData.checkOut}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Check-out
-                  </label>
-                  <DatePicker
-                    selected={formData.checkOut}
-                    onChange={(date) =>
-                      setFormData({ ...formData, checkOut: date })
-                    }
-                    excludeDates={unavailableDates}
-                    minDate={formData.checkIn || today}
-                    placeholderText="Select check-out date"
-                    selectsEnd
-                    startDate={formData.checkIn}
-                    endDate={formData.checkOut}
-                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
-                  />
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Room Type
@@ -197,26 +175,75 @@ export default function Hero() {
                     onChange={handleInputChange}
                     className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
                   >
-                    <option value="any" className="bg-gray-900">
-                      Any Room
+                    <option value="STANDARD" className="bg-gray-900">
+                      Standard Room - Ksh 8000
                     </option>
-                    <option value="standard" className="bg-gray-900">
-                      Standard Room
+                    <option value="DELUXE" className="bg-gray-900">
+                      Deluxe Room - Ksh 10000
                     </option>
-                    <option value="deluxe" className="bg-gray-900">
-                      Deluxe Room
-                    </option>
-                    <option value="suite" className="bg-gray-900">
-                      Executive Suite
+                    <option value="SUITE" className="bg-gray-900">
+                      Executive Suite - Ksh 12000
                     </option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Check-in
+                  </label>
+                  <DatePicker
+                    selected={formData.checkIn}
+                    onChange={(date) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        checkIn: date,
+                        checkOut:
+                          date && prev.checkOut && prev.checkOut < date
+                            ? null
+                            : prev.checkOut,
+                      }));
+                    }}
+                    excludeDates={unavailableDates}
+                    minDate={today}
+                    placeholderText="Select check-in date"
+                    selectsStart
+                    startDate={formData.checkIn}
+                    endDate={formData.checkOut}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
+                    disabled={isLoadingDates}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Check-out
+                  </label>
+                  <DatePicker
+                    selected={formData.checkOut}
+                    onChange={(date) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        checkOut: date,
+                      }))
+                    }
+                    excludeDates={unavailableDates}
+                    minDate={formData.checkIn || today}
+                    placeholderText="Select check-out date"
+                    selectsEnd
+                    startDate={formData.checkIn}
+                    endDate={formData.checkOut}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
+                    disabled={isLoadingDates}
+                  />
+                </div>
+              </div>
+
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg mt-6"
+                disabled={isLoadingDates}
               >
                 Check Availability
               </button>

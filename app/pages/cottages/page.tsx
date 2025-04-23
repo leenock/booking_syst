@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
-import { CalendarIcon, Users2, Bed, Bath, Home, Coffee } from "lucide-react";
-import DatePicker from "react-datepicker";
-import toast from "react-hot-toast";
-import "react-datepicker/dist/react-datepicker.css";
 import Footer from "@/app/components/landingpage/Footer";
+import { Home, Users2, Bath, Bed, Coffee, CalendarIcon } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import toast from "react-hot-toast";
 
 const cottages = [
   {
@@ -58,28 +58,33 @@ const cottages = [
   },
 ];
 
-export default function CottagesPage() {
+type RoomType = "STANDARD" | "DELUXE" | "SUITE";
+
+export default function Hero() {
   const router = useRouter();
-  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
   const today = new Date();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    checkIn: null as Date | null,
-    checkOut: null as Date | null,
-    guests: 1,
-    roomType: "",
+  const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+  const [isLoadingDates, setIsLoadingDates] = useState(false);
+  const [formData, setFormData] = useState<{
+    checkIn: Date | null;
+    checkOut: Date | null;
+    roomType: RoomType;
+  }>({
+    checkIn: null,
+    checkOut: null,
+    roomType: "STANDARD",
   });
 
   useEffect(() => {
     const fetchUnavailableDates = async () => {
+      setIsLoadingDates(true);
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/booking/booked_dates"
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch unavailable dates");
-        }
+        const endpoint = `http://localhost:5000/api/booking/booked_dates/${formData.roomType}`;
+        const response = await fetch(endpoint);
+
+        if (!response.ok) throw new Error("Failed to fetch unavailable dates");
+
         const data = await response.json();
         let parsedDates: Date[] = [];
 
@@ -99,17 +104,25 @@ export default function CottagesPage() {
       } catch (error) {
         console.error("Error fetching unavailable dates:", error);
         setUnavailableDates([new Date("2025-04-20"), new Date("2025-04-29")]);
+      } finally {
+        setIsLoadingDates(false);
       }
     };
 
     fetchUnavailableDates();
-  }, []);
+  }, [formData.roomType]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (name === "roomType") {
+      setFormData((prev) => ({
+        ...prev,
+        roomType: value.toUpperCase() as RoomType,
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -169,70 +182,15 @@ export default function CottagesPage() {
 
         <div className="max-w-7xl mx-auto px-4 py-12">
           {/* Booking Section */}
-          <div className="bg-black rounded-2xl shadow-lg p-6 mb-12 -mt-20 relative z-10">
-            <h2 className="text-2xl font-bold text-white mb-6">
+          <div className="bg-black rounded-2xl shadow-lg p-8 mb-12 -mt-20 relative z-10">
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">
               Book Your Stay
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Check-in Date */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
-                    Check-in
-                  </label>
-                  <div className="relative">
-                    <DatePicker
-                      selected={formData.checkIn}
-                      onChange={(date) => {
-                        setFormData({
-                          ...formData,
-                          checkIn: date,
-                          checkOut:
-                            formData.checkOut &&
-                            date &&
-                            formData.checkOut < date
-                              ? null
-                              : formData.checkOut,
-                        });
-                      }}
-                      excludeDates={unavailableDates}
-                      minDate={today}
-                      placeholderText="Select check-in date"
-                      selectsStart
-                      startDate={formData.checkIn}
-                      endDate={formData.checkOut}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
-                    />
-                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
-                  </div>
-                </div>
-
-                {/* Check-out Date */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
-                    Check-out
-                  </label>
-                  <div className="relative">
-                    <DatePicker
-                      selected={formData.checkOut}
-                      onChange={(date) =>
-                        setFormData({ ...formData, checkOut: date })
-                      }
-                      excludeDates={unavailableDates}
-                      minDate={formData.checkIn || today}
-                      placeholderText="Select check-out date"
-                      selectsEnd
-                      startDate={formData.checkIn}
-                      endDate={formData.checkOut}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white"
-                    />
-                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white" />
-                  </div>
-                </div>
-
+              <div className="grid md:grid-cols-3 gap-2">
                 {/* Room Type */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-white">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
                     Room Type
                   </label>
                   <div className="relative">
@@ -240,44 +198,89 @@ export default function CottagesPage() {
                       name="roomType"
                       value={formData.roomType}
                       onChange={handleInputChange}
-                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2.5 text-white appearance-none focus:outline-none focus:border-amber-400 transition-colors"
+                      className="w-[325px] sm:w-[300px] md:w-[350px] bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white"
                     >
-                      <option value="any" className="bg-gray-900">
-                        Any Room
+                      <option value="STANDARD" className="bg-gray-900">
+                        Standard Room - Ksh 8000
                       </option>
-                      <option value="standard" className="bg-gray-900">
-                        Standard Room
+                      <option value="DELUXE" className="bg-gray-900">
+                        Deluxe Room - Ksh 10000
                       </option>
-                      <option value="deluxe" className="bg-gray-900">
-                        Deluxe Room
-                      </option>
-                      <option value="suite" className="bg-gray-900">
-                        Executive Suite
+                      <option value="SUITE" className="bg-gray-900">
+                        Executive Suite - Ksh 12000
                       </option>
                     </select>
-                    <Home className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Home className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Check-in Date */}
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Check-in
+                  </label>
+                  <div className="relative">
+                    <DatePicker
+                      selected={formData.checkIn}
+                      onChange={(date) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          checkIn: date,
+                          checkOut:
+                            date && prev.checkOut && prev.checkOut < date
+                              ? null
+                              : prev.checkOut,
+                        }));
+                      }}
+                      excludeDates={unavailableDates}
+                      minDate={today}
+                      placeholderText="Select check-in date"
+                      selectsStart
+                      startDate={formData.checkIn}
+                      endDate={formData.checkOut}
+                      className="w-[325px] sm:w-[300px] md:w-[350px] bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white"
+                      disabled={isLoadingDates}
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Check-out Date */}
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Check-out
+                  </label>
+                  <div className="relative">
+                    <DatePicker
+                      selected={formData.checkOut}
+                      onChange={(date) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          checkOut: date,
+                        }))
+                      }
+                      excludeDates={unavailableDates}
+                      minDate={formData.checkIn || today}
+                      placeholderText="Select check-out date"
+                      selectsEnd
+                      startDate={formData.checkIn}
+                      endDate={formData.checkOut}
+                      className="w-[325px] sm:w-[300px] md:w-[350px] bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white"
+                      disabled={isLoadingDates}
+                    />
+                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white pointer-events-none" />
                   </div>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center">
                 <button
                   type="submit"
-                  className="bg-gradient-to-r from-amber-600 to-amber-500 text-white px-12 py-4 rounded-lg
-                    transform hover:scale-[1.02] hover:from-amber-700 hover:to-amber-600
-                    transition-all duration-300 shadow-lg hover:shadow-xl
-                    flex items-center justify-center space-x-3 font-medium text-lg
-                    relative overflow-hidden group"
+                  className="w-full sm:w-[300px] md:w-[350px] flex justify-center items-center  bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-600 hover:to-amber-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg"
+                  disabled={isLoadingDates}
                 >
-                  <div
-                    className="absolute inset-0 bg-gradient-to-r from-amber-400 to-amber-300 opacity-0 
-                    group-hover:opacity-20 transition-opacity duration-300"
-                  ></div>
-                  <CalendarIcon className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="group-hover:tracking-wide transition-all duration-300">
-                    Check Availability
-                  </span>
+                  {isLoadingDates ? "Loading..." : "Check Availability"}
                 </button>
               </div>
             </form>
