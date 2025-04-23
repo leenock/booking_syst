@@ -246,7 +246,7 @@ export default function BookingsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors cursor-pointer"
         >
           <Plus className="h-5 w-5 mr-2" />
           Add Booking
@@ -272,7 +272,7 @@ export default function BookingsPage() {
               <select
                 value={selectedRoomType}
                 onChange={(e) => setSelectedRoomType(e.target.value as RoomType | "ALL")}
-                className="pl-10 pr-8 py-2 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                className="pl-10 pr-8 py-2 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-purple-400 focus:border-transparent cursor-pointer"
               >
                 <option value="ALL">All Room Types</option>
                 <option value="STANDARD">Standard</option>
@@ -285,7 +285,7 @@ export default function BookingsPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value as BookingStatus | "ALL")}
-                className="pl-10 pr-8 py-2 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+                className="pl-10 pr-8 py-2 border border-gray-200 rounded-lg appearance-none focus:ring-2 focus:ring-purple-400 focus:border-transparent cursor-pointer"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="PENDING">Pending</option>
@@ -433,14 +433,14 @@ export default function BookingsPage() {
                       <div className="flex justify-end space-x-2">
                         <button
                           onClick={() => handleEditClick(booking)}
-                          className="text-purple-600 hover:text-purple-900 flex items-center"
+                          className="text-purple-600 hover:text-purple-900 flex items-center cursor-pointer"
                         >
                           <Edit2 className="h-4 w-4 mr-1" />
                           Edit
                         </button>
                         <button
                           onClick={() => handleDeleteClick(booking)}
-                          className="text-red-600 hover:text-red-900 flex items-center"
+                          className="text-red-600 hover:text-red-900 flex items-center cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4 mr-1" />
                           Delete

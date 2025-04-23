@@ -312,7 +312,7 @@ export default function EditBookingModal({
             </h2>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-500 transition-colors"
+              className="text-gray-400 hover:text-gray-500 transition-colors cursor-pointer"
             >
               <X className="w-6 h-6" />
             </button>
@@ -587,7 +587,7 @@ export default function EditBookingModal({
                   onClick={handleClose}
                   disabled={isLoading}
                   className="px-6 py-2.5 text-gray-700 bg-gray-100 rounded-lg 
-                           hover:bg-gray-200 transition-colors font-medium"
+                           hover:bg-gray-200 transition-colors font-medium cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -596,7 +596,7 @@ export default function EditBookingModal({
                   disabled={isLoading}
                   className="px-6 py-2.5 bg-blue-600 text-white rounded-lg 
                            hover:bg-blue-700 transition-colors disabled:opacity-50 
-                           disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+                           disabled:cursor-not-allowed flex items-center gap-2 font-medium cursor-pointer"
                 >
                   {isLoading ? (
                     <>
