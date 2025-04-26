@@ -9,6 +9,8 @@ const {
   updateVisitor,
   loginVisitor,
   logoutVisitor,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/visitorController");
 
 // Basic CRUD routes
@@ -21,6 +23,8 @@ router.delete('/:id', deleteVisitor); // Delete visitor
 // Additional routes for visitor management
 router.post('/login', loginVisitor); // login visitor
 router.post('/logout', logoutVisitor); // logout visitor
+router.post('/forgot-password', forgotPassword); // forgot password
+router.post('/reset-password/', resetPassword); // reset password
 // Additional routes for visitor management
 
 module.exports = router;

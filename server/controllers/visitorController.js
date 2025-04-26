@@ -1,8 +1,15 @@
 const { PrismaClient } = require("@prisma/client");
+
+require('dotenv').config(); // Load .env
+
 const prisma = new PrismaClient();
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY); // Not with NEXT_PUBLIC_
+
 
 // Get all visitors
 const getAllVisitors = async (req, res) => {
@@ -134,7 +141,7 @@ const createVisitor = async (req, res) => {
   }
 };
 
-// update frontend visitor 
+// update frontend visitor
 
 const updateVisitorFrontend = async (req, res) => {
   try {
@@ -148,7 +155,7 @@ const updateVisitorFrontend = async (req, res) => {
         details: {
           firstName: !firstName ? "First name is required" : null,
           lastName: !lastName ? "Last name is required" : null,
-        //  email: !email ? "Email is required" : null,
+          //  email: !email ? "Email is required" : null,
           phone: !phone ? "Phone is required" : null,
           password: !password ? "Password is required" : null,
         },
@@ -156,7 +163,7 @@ const updateVisitorFrontend = async (req, res) => {
     }
 
     // Validate email format
-   /*  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    /*  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({
         error: "Invalid email format",
@@ -206,7 +213,7 @@ const updateVisitorFrontend = async (req, res) => {
         lastName: true,
         //email: true,
         phone: true,
-        password:true,
+        password: true,
         isActive: true,
         updatedAt: true,
       },
@@ -218,7 +225,6 @@ const updateVisitorFrontend = async (req, res) => {
     res.status(500).json({ error: "Failed to update visitor" });
   }
 };
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Update visitor from admin side
@@ -392,6 +398,87 @@ const logoutVisitor = async (req, res) => {
   }
 };
 
+// forgot password --- send email
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const visitor = await prisma.visitorAccount.findUnique({
+      where: { email },
+    });
+
+    if (!visitor) {
+      return res.status(404).json({ message: "Visitor not found" });
+    }
+
+    // Generate a JWT token for password reset
+    const token = jwt.sign(
+      { id: visitor.id, email: visitor.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    // Create reset URL
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pages/auth/reset-password?token=${token}`;
+
+    // Send email
+    await resend.emails.send({
+      from: "Your App Name <onboarding@resend.dev>",
+      to: email,
+      subject: "Reset your password",
+      html: `
+        <h1>Reset Password</h1>
+        <p>Click the link below to reset your password:</p>
+        <a href="${resetUrl}" target="_blank" rel="noopener noreferrer">Reset Password</a>
+        <p>This link will expire in 1 hour.</p>
+      `,
+    });
+
+    res.json({ message: "Password reset link sent to your email" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Failed to send password reset link" });
+  }
+};
+
+// reset password
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Validate token and new password
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: "Token and new password are required" });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update visitor password
+    const updatedVisitor = await prisma.visitorAccount.update({
+      where: { id: decoded.id },
+      data: { password: hashedPassword },
+      select: { id: true, email: true },
+    });
+
+    res.json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Failed to reset password" });
+  }
+};
+
+// Change password
+
 module.exports = {
   getAllVisitors,
   getVisitorById,
@@ -401,5 +488,7 @@ module.exports = {
   deleteVisitor,
   loginVisitor,
   logoutVisitor,
+  forgotPassword,
+  resetPassword,
   // Add any other visitor-related functions here
 };
