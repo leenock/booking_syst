@@ -32,7 +32,7 @@ const getRecentLoginAttempts = async (req, res) => {
   try {
     const logs = await prisma.loginActivity.findMany({
       orderBy: { timestamp: 'desc' },
-      take: 10,
+      take: 100,
     });
     res.json({ success: true, data: logs });
   } catch (error) {

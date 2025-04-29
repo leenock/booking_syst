@@ -175,10 +175,11 @@ export default function LoginLogsTable() {
           <div>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
+              className="px-4 py-2 sm:px-3 sm:py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center"
             >
               <Clock size={16} className="mr-2" />
-              Refresh Logs
+              <span className="hidden sm:inline">Refresh Logs</span>
+              <span className="inline sm:hidden">Refresh</span>
             </button>
           </div>
         </div>
@@ -204,91 +205,92 @@ export default function LoginLogsTable() {
             </div>
           </div>
         </div>
-
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                User
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Time
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                IP Address
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Device
-              </th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.length === 0 ? (
+        <div className="max-h-[33rem] overflow-y-auto">
+          {" "}
+          {/* Adjust max-h as needed */}
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-10 text-center text-gray-500 text-sm"
-                >
-                  No login activity found.
-                </td>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  User
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Time
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  IP Address
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Device
+                </th>
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
-            ) : (
-              logs.map((log, index) => (
-                <tr
-                  key={log.id}
-                  className={`hover:bg-gray-50 transition-colors duration-150 ${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-medium">
-                    {log.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 mr-3">
-                        <User className="text-gray-500" size={20} />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900">
-                        {log.email}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-700">
-                      <Clock size={16} className="mr-2 text-gray-400" />
-                      {log.timestamp}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-700">
-                      <Globe size={16} className="mr-2 text-gray-400" />
-                      {log.ipAddress}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {log.device}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end">
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[log.status]}`}
-                      >
-                        {loginStatusIcons[log.status]}
-                        <span className="ml-1">{log.status}</span>
-                      </span>
-                    </div>
+            </thead>
+            <tbody>
+              {logs.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-6 py-10 text-center text-gray-500 text-sm"
+                  >
+                    No login activity found.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                logs.map((log, index) => (
+                  <tr
+                    key={log.id}
+                    className={`transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100`}
+                  >
+                    <td className="px-6 py-3 whitespace-nowrap text-sm text-gray-500 font-medium">
+                      {log.id}
+                    </td>
+                    <td className="px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 mr-3">
+                          <User className="text-gray-500" size={16} />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">
+                          {log.email}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-700">
+                        <Clock size={14} className="mr-2 text-gray-400" />
+                        {log.timestamp}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-700">
+                        <Globe size={14} className="mr-2 text-gray-400" />
+                        {log.ipAddress}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-sm text-gray-700">
+                      {log.device}
+                    </td>
+                    <td className="px-6 py-3 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end">
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[log.status]}`}
+                        >
+                          {loginStatusIcons[log.status]}
+                          <span className="ml-1">{log.status}</span>
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
           <p className="text-xs text-gray-500">
             Login attempts are retained for 30 days. Export logs for longer
