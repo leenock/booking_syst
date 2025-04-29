@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense  } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Lock, CheckCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-amber-100">
       {/* Navbar */}
       <Navbar />
@@ -203,6 +203,5 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
-    </Suspense>
   );
 }

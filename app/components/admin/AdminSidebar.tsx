@@ -7,7 +7,7 @@ import {
   Home,
   Users,
   Calendar,
-  Bell,
+  Plus,
   Settings,
   LogOut,
   Menu,
@@ -50,7 +50,11 @@ const MENU_ITEMS: MenuItem[] = [
     icon: BarChart2,
     href: "/secure-access/admin/analytics",
   },
- // { name: "Settings", icon: Settings, href: "/secure-access/admin/settings" },
+  {
+    name: "About Vicarage",
+    icon: Plus,
+    href: "/secure-access/admin/about_settings",
+  },
 ];
 
 const RESIZE_DEBOUNCE_MS = 100;

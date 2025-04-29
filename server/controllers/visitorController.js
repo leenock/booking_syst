@@ -426,7 +426,7 @@ const forgotPassword = async (req, res) => {
 
     // Send email
     await resend.emails.send({
-      from: "Your App Name <onboarding@resend.dev>",
+      from: "App name <onboarding@resend.dev>",
       to: email,
       subject: "Reset your password",
       html: `

@@ -7,6 +7,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model LoginActivity {
+  id         String   @id @default(uuid())
+  email   String   // Username attempted
+  ipAddress  String   // IP address of the request
+  device     String   // Browser and OS info
+  status     Status   // Enum: SUCCESS | FAILED | SUSPICIOUS
+  timestamp  DateTime @default(now())
+}
+
+enum Status {
+  SUCCESS
+  FAILED
+  SUSPICIOUS
+}
+
+
+model KnowldgeBase {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+}
+
 model Admin {
   id        String   @id @default(uuid())
   firstName String

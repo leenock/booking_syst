@@ -6,6 +6,8 @@ const roomRoutes = require('./routes/roomRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const visitorRoutes = require('./routes/visitorRoutes');
+const knowledgeRoutes = require('./routes/knowledgeRoutes');
+const loginActivityRoutes = require('./routes/loginActivityRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +27,9 @@ app.use('/api/booking', bookingRoutes);
 app.use('/api/visitor-accounts', visitorRoutes);
 // 
 app.use('/api/visitor-accounts/users', visitorRoutes);
+
+app.use('/api/knowledge-base', knowledgeRoutes);
+app.use('/api/login-activity', loginActivityRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

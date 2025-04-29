@@ -18,6 +18,7 @@
     "chart.js": "^4.4.8",
     "connect-redis": "^8.0.2",
     "express-session": "^1.18.1",
+    "framer-motion": "^12.9.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.483.0",
     "next": "15.2.3",
