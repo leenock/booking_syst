@@ -2,7 +2,14 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Create new login activity
-const logLoginAttempt = async ({ email, ipAddress, device, status }) => {
+// Create new login activity
+const logLoginAttempt = async (req, res) => {
+  const { email, ipAddress, device, status } = req.body; // Destructure from the request body
+
+  if (!email || !ipAddress || !device || !status) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
   try {
     const entry = await prisma.loginActivity.create({
       data: {
@@ -12,12 +19,13 @@ const logLoginAttempt = async ({ email, ipAddress, device, status }) => {
         status,
       },
     });
-    return entry;
+    res.status(201).json({ success: true, data: entry });
   } catch (error) {
     console.error('Error logging login activity:', error);
-    throw error;
+    res.status(500).json({ success: false, error: 'Failed to log login activity' });
   }
 };
+
 
 // Get latest login attempts (optional)
 const getRecentLoginAttempts = async (req, res) => {

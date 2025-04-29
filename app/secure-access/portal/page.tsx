@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn, Mail, Lock } from "lucide-react";
@@ -14,15 +13,62 @@ export default function AdminLogin() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState<{ [key: string]: number }>({});
 
+  // Track login attempts per email
   useEffect(() => {
     setMounted(true);
-    
+
     // Check if user is already logged in
     if (AuthService.isAuthenticated()) {
       router.push("/secure-access/admin");
     }
   }, [router]);
+
+  // Helper to extract browser and OS info
+  const getDeviceInfo = () => {
+    const ua = navigator.userAgent;
+    let browser = "Unknown";
+    let os = "Unknown";
+
+    if (ua.includes("Firefox")) {
+      browser = "Firefox";
+    } else if (ua.includes("Edg")) {
+      browser = "Edge";
+    } else if (ua.includes("Chrome")) {
+      browser = "Chrome";
+    }
+
+    if (ua.includes("Windows")) {
+      os = "Windows";
+    } else if (ua.includes("Mac")) {
+      os = "MacOS";
+    } else if (ua.includes("Linux")) {
+      os = "Linux";
+    }
+
+    return `${browser} / ${os}`;
+  };
+
+  // Send login activity to API
+  const logLoginActivity = async (status: "SUCCESS" | "FAILED" | "SUSPICIOUS") => {
+    const payload = {
+      email,
+      ipAddress: "127.0.0.1", // You should replace this with real IP from backend
+      device: getDeviceInfo(),
+      status,
+    };
+
+    try {
+      await fetch("http://localhost:5000/api/login-activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      console.error("Failed to log login activity:", err);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,16 +88,22 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (!response.ok) {
+        const newAttempts = { ...loginAttempts };
+        newAttempts[email] = (newAttempts[email] || 0) + 1;
+        setLoginAttempts(newAttempts);
+
+        const isSuspicious = newAttempts[email] >= 3;
+
+        await logLoginActivity(isSuspicious ? "SUSPICIOUS" : "FAILED");
+
         throw new Error(data.error || "Login failed");
       }
 
-      // Use AuthService to set authentication
+      // Successful login
       AuthService.setAuth(data.token, data.admin);
+      await logLoginActivity("SUCCESS");
 
-      // Show success state
       setIsSuccess(true);
-      
-      // Wait for success animation before redirecting
       setTimeout(() => {
         router.push("/secure-access/admin");
       }, 1000);
@@ -201,7 +253,7 @@ export default function AdminLogin() {
                 type="submit"
                 disabled={isLoading || isSuccess}
                 className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] ${
-                  isSuccess ? 'bg-green-500 hover:bg-green-600' : ''
+                  isSuccess ? "bg-green-500 hover:bg-green-600" : ""
                 }`}
               >
                 {isLoading ? (
