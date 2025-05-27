@@ -23,7 +23,6 @@ interface SavedChat {
 
 const CHAT_STORAGE_KEY = "vicarage_chat_history";
 const CHAT_EXPIRY_DAYS = 7; // Chats expire after 7 days
-const API_ENDPOINT = "http://192.168.100.3:1234/v1/chat/completions"; // The API endpoint from the second example
 
 const ChatWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -146,14 +145,6 @@ const ChatWindow = () => {
     }
   };
 
-  // Format message for API request
-  const formatMessagesForAPI = (msgs: Message[]) => {
-    return msgs.map((msg) => ({
-      role: msg.role,
-      content: msg.text,
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
@@ -166,29 +157,33 @@ const ChatWindow = () => {
       timestamp: new Date(),
       role: "user",
     };
-
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setMessage("");
     setIsLoading(true);
 
     try {
-      // Call the LLaMA API
-      const response = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "llama-3.2-1b-instruct",
-          messages: formatMessagesForAPI(updatedMessages),
-        }),
-      });
+      // ✅ Send question to your own backend
+      const response = await fetch(
+        "http://localhost:5000/api/knowledge-base/response",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            question: message,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to get response");
+        throw new Error("Failed to get response from backend");
       }
 
       const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
+
+      const aiResponse = data.answer || "No matching article found.";
 
       // Add AI response
       const aiMessage: Message = {
@@ -205,7 +200,7 @@ const ChatWindow = () => {
       // Add error message
       const errorMessage: Message = {
         id: updatedMessages.length + 1,
-        text: "Sorry, I encountered an error while processing your request.",
+        text: "Sorry, I am not available to process your request at this hour.",
         isUser: false,
         timestamp: new Date(),
         role: "assistant",

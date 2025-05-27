@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 
-require('dotenv').config(); // Load .env
+require("dotenv").config(); // Load .env
 
 const prisma = new PrismaClient();
 const bcrypt = require("bcryptjs");
@@ -8,8 +8,9 @@ const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY); // Not with NEXT_PUBLIC_
+const nodemailer = require("nodemailer");
 
+//const resend = new Resend(process.env.RESEND_API_KEY); // Not with NEXT_PUBLIC_
 
 // Get all visitors
 const getAllVisitors = async (req, res) => {
@@ -132,6 +133,35 @@ const createVisitor = async (req, res) => {
         isActive: true,
         createdAt: true,
       },
+    });
+
+    // Send email after account creation
+
+    // Node mailer transporter
+    const transporter1 = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // e.g., yourname@gmail.com
+        pass: process.env.EMAIL_PASS, // app password (not your real Gmail password)
+      },
+    });
+
+    // Send the email
+    await transporter1.sendMail({
+      from: `"Vicarage Booking" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Your Account Has Been Created",
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
+          <h2 style="color: #007BFF;">Welcome, ${firstName}!</h2>
+          <p>Your account has been successfully created.</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Password:</strong> ${password}</p>
+          <p>You can now log in to your account.</p>
+          <hr />
+          <p style="font-size: 0.9em; color: #888;">This email is for your records. Do not share it with anyone.</p>
+        </div>
+      `,
     });
 
     res.status(201).json(visitor);
@@ -424,16 +454,30 @@ const forgotPassword = async (req, res) => {
     // Create reset URL
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/pages/auth/reset-password?token=${token}`;
 
-    // Send email
-    await resend.emails.send({
-      from: "App name <onboarding@resend.dev>",
+    // Node mailer transporter
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // e.g., yourname@gmail.com
+        pass: process.env.EMAIL_PASS, // app password (not your real Gmail password)
+      },
+    });
+
+    // Send the email
+    await transporter.sendMail({
+      from: `"Reset Password" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Reset your password",
       html: `
-        <h1>Reset Password</h1>
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetUrl}" target="_blank" rel="noopener noreferrer">Reset Password</a>
-        <p>This link will expire in 1 hour.</p>
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+          <h2>Password Reset Request</h2>
+          <p>Hello ${visitor.name || "there"},</p>
+          <p>Click the link below to reset your password:</p>
+          <p><a href="${resetUrl}" style="color: #1a73e8;" target="_blank">Reset Password</a></p>
+          <p>This link will expire in 1 hour.</p>
+          <hr />
+          <p style="font-size: 12px; color: #888;">If you didn’t request this, please ignore this email.</p>
+        </div>
       `,
     });
 
@@ -451,7 +495,9 @@ const resetPassword = async (req, res) => {
 
     // Validate token and new password
     if (!token || !newPassword) {
-      return res.status(400).json({ error: "Token and new password are required" });
+      return res
+        .status(400)
+        .json({ error: "Token and new password are required" });
     }
 
     // Verify token
@@ -469,7 +515,31 @@ const resetPassword = async (req, res) => {
       data: { password: hashedPassword },
       select: { id: true, email: true },
     });
+    //res.json(updatedVisitor);
 
+    // Send confirmation email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+    await transporter.sendMail({
+      from: `"Password Reset Confirmation" <${process.env.EMAIL_USER}>`,
+      to: updatedVisitor.email,
+      subject: "Your password has been reset",
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: auto;">
+          <h2>Password Reset Successful</h2>
+          <p>Hello,</p>
+          <p>Your password has been successfully reset.</p>
+          <p><strong>New Password:</strong> ${newPassword}</p>
+          <p>If you did not request this change, please contact support immediately.</p>
+        </div>
+      `,
+    });
+    // Send success response
     res.json({ message: "Password has been reset successfully" });
   } catch (error) {
     console.error("Reset password error:", error);
@@ -478,7 +548,6 @@ const resetPassword = async (req, res) => {
 };
 
 // Change password
-
 module.exports = {
   getAllVisitors,
   getVisitorById,

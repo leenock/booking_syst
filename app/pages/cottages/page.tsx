@@ -15,40 +15,39 @@ const cottages = [
     id: "standard",
     name: "Standard Room",
     description:
-      "Serene cottage with stunning lake views, perfect for a romantic getaway.",
+      "Standard size room with stunning view, perfect for a romantic getaway.",
     price: 8000,
     image: "/images/bed1.webp",
-    beds: 1,
+    beds: "Single Occupancy",
     baths: 1,
     maxGuests: 2,
-    amenities: ["High-speed WiFi", "4K Smart TV"],
+    amenities: ["High-speed WiFi"],
   },
   {
     id: "deluxe",
     name: "Deluxe Room",
     description:
-      "Spacious villa with multiple bedrooms, ideal for family vacations.",
+      "Spacious cottage, ideal for family vacations.",
     price: 10000,
     image: "/images/bed2.webp",
-    beds: 3,
-    baths: 2,
-    maxGuests: 6,
+    beds: "Single Occupancy",
+    baths: 1,
+    maxGuests: 2,
     amenities: [
       "High-speed WiFi",
-      "4K Smart TV",
       "Premium Coffee Station",
-      "Mini Bar",
+      
     ],
   },
   {
     id: "suite",
     name: "Executive Suite",
-    description: "Luxury cottage with modern amenities and private pool.",
+    description: "Luxury cottage with modern amenities.",
     price: 12000,
     image: "/images/bed3.jpg",
-    beds: 2,
-    baths: 2,
-    maxGuests: 4,
+    beds: "Double Occupancy",
+    baths: 1,
+    maxGuests: 2,
     amenities: [
       "High-speed WiFi",
       "4K Smart TV",
@@ -319,7 +318,7 @@ export default function Hero() {
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="flex items-center text-gray-600">
                       <Bed className="w-5 h-5 mr-2 text-amber-600" />
-                      {cottage.beds} {cottage.beds === 1 ? "Bed" : "Beds"}
+                      {cottage.beds}
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Bath className="w-5 h-5 mr-2 text-amber-600" />
@@ -346,7 +345,7 @@ export default function Hero() {
                           key={amenity}
                           className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm flex items-center"
                         >
-                          <Coffee className="w-4 h-4 mr-1" />
+                          <span className="w-4 h-4 mr-1" />
                           {amenity}
                         </span>
                       ))}

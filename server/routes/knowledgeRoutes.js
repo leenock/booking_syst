@@ -6,7 +6,9 @@ const {
     getKnowledgeBaseArticleById,
     updateKnowledgeBaseArticleById,
     deleteKnowledgeBaseArticleById,
-    createKnowledgeBaseArticle
+    createKnowledgeBaseArticle,
+    createBulkKnowledgeBaseArticles,
+    getResponseFromKnowledgeBase
 } = require('../controllers/knowledgeBaseController');
 
 // Define the routes for the knowledge base
@@ -23,7 +25,12 @@ router.put('/:id', updateKnowledgeBaseArticleById);
 // Delete a knowledge base article by ID
 router.delete('/:id', deleteKnowledgeBaseArticleById);
 
-// Create new room
+// Create new article
 router.post('/', createKnowledgeBaseArticle);
+// Create multiple articles in bulk
+router.post('/bulk', createBulkKnowledgeBaseArticles);
+
+// Get response from knowledge base
+router.post('/response', getResponseFromKnowledgeBase);
 
 module.exports = router;

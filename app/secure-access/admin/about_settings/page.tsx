@@ -216,7 +216,7 @@ const KnowledgeBaseTable = () => {
                       key={article.id}
                       className="odd:bg-white even:bg-blue-50 hover:bg-blue-100 transition-colors duration-150"
                     >
-                      <td className="px-4 py-3 min-w-[200px] text-green-900 uppercase font-extrabold">{article.question}</td>
+                      <td className="px-4 py-3 min-w-[200px] text-green-900  font-extrabold">{article.question}</td>
                       <td className="px-4 py-3">{article.answer}</td>
                       <td className="px-4 py-3 flex space-x-2">
                         <button

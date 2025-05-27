@@ -22,7 +22,7 @@ const PrimaryButton = ({
         ${fullWidth ? 'w-full' : 'w-auto'} 
         hover:opacity-90
         ${className}
-      `}
+      cursor-pointer`}
       {...props}
     >
       <span className="relative z-10">{children}</span>

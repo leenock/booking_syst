@@ -23,7 +23,7 @@ const SecondaryButton = ({
         hover:translate-y-[-2px] 
         ${fullWidth ? 'w-full' : 'w-auto'}
         ${className}
-      `}
+      cursor-pointer`}
       {...props}
     >
       {children}

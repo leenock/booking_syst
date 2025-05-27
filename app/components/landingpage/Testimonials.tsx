@@ -48,16 +48,16 @@ export default function Testimonials() {
             image="https://randomuser.me/api/portraits/women/17.jpg"
           />
           <TestimonialCard 
-            name="Thomas Chen"
+            name="Thomas Muriuki"
             location="Nairobi, Kenya"
             quote="A truly outstanding experience from check-in to check-out. The room was immaculate, and the restaurant offerings were exceptional."
             image="https://randomuser.me/api/portraits/men/54.jpg"
           />
           <TestimonialCard 
-            name="Sophie Miller"
-            location="London, UK"
+            name="Ann Mukami"
+            location="Embu, Kenya"
             quote="The perfect blend of luxury and comfort. The spa facilities were particularly remarkable, and the staff made our anniversary truly special."
-            image="https://randomuser.me/api/portraits/women/63.jpg"
+            image="https://images.unsplash.com/photo-1606415918835-88d0614e75ad?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           />
         </div>
       </div>

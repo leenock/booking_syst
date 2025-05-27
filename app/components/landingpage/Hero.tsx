@@ -20,13 +20,13 @@ const Hero = () => {
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight mb-4 md:mb-6 animate-fade-in-up animation-delay-150">
                 Vicarage <span className="text-amber-400">Resorts</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-xl mb-6 md:mb-8 animate-fade-in-up animation-delay-300">
+              <p className="text-base sm:text-lg md:text-base text-gray-300 max-w-xl mb-6 md:mb-8 animate-fade-in-up animation-delay-300">
                 Haven of relaxation and rejuvenation that climaxes with
                 beautiful mountain views from the hotel rooftop restaurant. A
                 friendly, warm swimming pool and children play facilities
                 complete the Hotel's family offering of leisure and pleasure.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-450">
+              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-450 ">
                 <Link href="/pages/explore">
                   <PrimaryButton fullWidth>Book Your Stay</PrimaryButton>
                 </Link>
@@ -39,7 +39,7 @@ const Hero = () => {
               <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-8 sm:mt-12 pt-8 sm:pt-12 border-t border-gray-700 animate-fade-in-up animation-delay-600">
                 <div>
                   <h3 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 text-amber-400">
-                    20+
+                    4+
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-400">
                     Luxury Rooms
@@ -87,7 +87,7 @@ const Hero = () => {
                     Excellent
                   </h4>
                   <p className="text-xs sm:text-sm text-gray-400">
-                    2,500+ Reviews
+                    70+ Reviews
                   </p>
                 </div>
               </div>

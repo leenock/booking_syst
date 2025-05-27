@@ -42,7 +42,7 @@ export default function About() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-6 items-center animate-fade-in-up animation-delay-450">
+            {/*   <div className="flex flex-wrap gap-6 items-center animate-fade-in-up animation-delay-450">
                 <button className="group flex items-center gap-2 text-amber-400 hover:text-amber-300 font-medium transition-colors">
                   <span>Discover Our Story</span>
                   <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -55,7 +55,7 @@ export default function About() {
                   </div>
                   <span className="text-sm text-gray-400">Meet our team</span>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 

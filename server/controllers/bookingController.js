@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const transporter = require("../utils/transporter");
+
 // Get all bookings
 const getAllBookings = async (req, res) => {
   try {
@@ -320,6 +322,108 @@ const createBooking = async (req, res) => {
       },
     });
 
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    // Calculate the number of nights (1 night minimum)
+    const timeDiff = checkOutDate - checkInDate;
+    const nights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    const totalAmount = nights * parseFloat(roomPrice);
+
+    // send email notification
+    const mailOptions = {
+      from: `"Hotel Management" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Booking Confirmation - Thank You for Choosing Us!",
+      html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 30px; background-color: #fafafa;">
+      <h2 style="color: #2c3e50; text-align: center;">Booking Confirmation</h2>
+      
+      <p style="font-size: 16px;">Dear <strong>${fullName}</strong>,</p>
+
+      <p style="font-size: 15px;">
+        We are pleased to confirm your booking. Below are your reservation details:
+      </p>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0;">
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Room Type:</td>
+          <td style="padding: 10px;">${roomType}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Check-in Date:</td>
+          <td style="padding: 10px;">${new Date(checkIn).toLocaleDateString()}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Check-out Date:</td>
+          <td style="padding: 10px;">${new Date(checkOut).toLocaleDateString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Number of Adults:</td>
+          <td style="padding: 10px;">${adults}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Number of Kids:</td>
+          <td style="padding: 10px;">${kids}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Special Request:</td>
+          <td style="padding: 10px;">${specialRequest || "None"}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Room Price:</td>
+          <td style="padding: 10px;">KES ${parseFloat(roomPrice).toLocaleString()}</td>
+        </tr>
+        <tr>
+        <td style="padding: 10px;">Total Nights:</td>
+        <td style="padding: 10px;">${nights}</td>
+      </tr>
+      <tr style="background-color: #f0f0f0;">
+        <td style="padding: 10px;"><strong>Total Amount</strong>:</td>
+        <td style="padding: 10px;"><strong>KES ${totalAmount.toLocaleString()}</strong></td>
+      </tr>
+
+        <tr>
+          <td style="padding: 10px;">Payment Method:</td>
+          <td style="padding: 10px;">${paymentMethod}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Booking Status:</td>
+          <td style="padding: 10px;">${bookingData.status}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Email:</td>
+          <td style="padding: 10px;">${email}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Phone:</td>
+          <td style="padding: 10px;">${phone}</td>
+        </tr>
+      </table>
+
+      <p style="font-size: 15px;">
+        If you have any questions or would like to make changes to your reservation, please contact us at <a href="mailto:${process.env.EMAIL_USER}">${process.env.EMAIL_USER}</a>.
+      </p>
+
+      <p style="margin-top: 30px;">Thank you for choosing us!</p>
+
+      <p style="font-size: 13px; color: #777; text-align: center; border-top: 1px solid #ddd; padding-top: 15px;">
+        Vicarage Resorts<br />
+        www.vicarageresorts.com<br />
+        ☎ 0743666333 | 0746888333
+      </p>
+    </div>
+  `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
@@ -485,6 +589,104 @@ const updateBooking = async (req, res) => {
       message: "Booking updated successfully",
       data: updatedBooking,
     });
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    // Calculate the number of nights (1 night minimum)
+    const timeDiff = checkOutDate - checkInDate;
+    const nights = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    const totalAmount = nights * parseFloat(roomPrice);
+
+    // Send email notification
+    const mailOptions = {
+      from: `"Hotel Management" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Booking Update - Thank You for Choosing Us!",
+      html: `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 30px; background-color: #fafafa;">
+      <h2 style="color: #2c3e50; text-align: center;">Booking Update</h2>
+      
+      <p style="font-size: 16px;">Dear <strong>${fullName}</strong>,</p>
+
+      <p style="font-size: 15px;">
+        We have successfully updated your booking. Below are your updated reservation details:
+      </p>
+
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0;">
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Room Type:</td>
+          <td style="padding: 10px;">${roomType}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Check-in Date:</td>
+          <td style="padding: 10px;">${new Date(checkIn).toLocaleDateString()}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Check-out Date:</td>
+          <td style="padding: 10px;">${new Date(checkOut).toLocaleDateString()}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Number of Adults:</td>
+          <td style="padding: 10px;">${adults}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Number of Kids:</td>
+          <td style="padding: 10px;">${kids}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Special Request:</td>
+          <td style="padding: 10px;">${specialRequest || "None"}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Room Price:</td>
+          <td style="padding: 10px;">KES ${parseFloat(roomPrice).toLocaleString()}</td>
+        </tr>
+         <tr>
+        <td style="padding: 10px;">Total Nights:</td>
+        <td style="padding: 10px;">${nights}</td>
+      </tr>
+      <tr style="background-color: #f0f0f0;">
+        <td style="padding: 10px;"><strong>Total Amount</strong>:</td>
+        <td style="padding: 10px;"><strong>KES ${totalAmount.toLocaleString()}</strong></td>
+      </tr>
+        <tr>
+        <td style="padding: 10px;">Payment Method:</td>
+        <td style="padding: 10px;">${paymentMethod}</td>
+      </tr>
+        <tr style="background-color: #f0f0f0;"> 
+          <td style="padding: 10px;">Booking Status:</td>
+          <td style="padding: 10px; color:green"><strong>${status}<strong></td>
+        </tr>
+        <tr>
+          <td style="padding: 10px;">Email:</td>
+          <td style="padding: 10px;">${email}</td>
+        </tr>
+        <tr style="background-color: #f0f0f0;">
+          <td style="padding: 10px;">Phone:</td>
+          <td style="padding: 10px;">${phone}</td>
+        </tr>
+      </table>
+      <p style="font-size: 15px;">
+        If you have any questions or would like to make further changes to your reservation, please contact us at <a href="mailto:${process.env.EMAIL_USER}">${process.env.EMAIL_USER}</a>.
+      </p>
+      <p style="margin-top: 30px;">Thank you for choosing us!</p>
+      <p style="font-size: 13px; color: #777; text-align: center; border-top: 1px solid #ddd; padding-top: 15px;">
+        Vicarage Resorts<br />
+        www.vicarageresorts.com<br />
+        ☎ 0743666333 | 0746888333
+      </p>
+    </div>
+  `,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
   } catch (error) {
     console.error("Error processing booking update:", error);
     res.status(500).json({
@@ -641,8 +843,6 @@ const getBookedDates = async (req, res) => {
     });
   }
 };
-
-
 
 module.exports = {
   getAllBookings,

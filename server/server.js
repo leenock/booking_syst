@@ -9,6 +9,8 @@ const visitorRoutes = require('./routes/visitorRoutes');
 const knowledgeRoutes = require('./routes/knowledgeRoutes');
 const loginActivityRoutes = require('./routes/loginActivityRoutes');
 
+const contactRoute = require('./routes/contact');
+
 // Load environment variables
 dotenv.config();
 
@@ -30,6 +32,8 @@ app.use('/api/visitor-accounts/users', visitorRoutes);
 
 app.use('/api/knowledge-base', knowledgeRoutes);
 app.use('/api/login-activity', loginActivityRoutes);
+
+app.use('/api', contactRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
